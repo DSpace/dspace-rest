@@ -1,0 +1,100 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.dspace</groupId>
+    <artifactId>dspace-rest</artifactId>
+    <name>DSpace Services REST API</name>
+    <description>The core REST API for DSpace</description>
+    <url>http://projects.dspace.org</url>
+    <organization>
+        <name>The DSpace Foundation</name>
+        <url>http://www.dspace.org</url>
+    </organization>
+    <inceptionYear>Monday, September 1, 2008</inceptionYear>
+    <packaging>war</packaging>
+
+    <parent>
+        <artifactId>dspace-parent</artifactId>
+        <groupId>org.dspace</groupId>
+        <version>2.0.0-SNAPSHOT</version><!--dspace2.version-->
+    </parent>
+
+    <dependencies>
+        <!-- all in one requires the api and impl bundled in with the rest webapp -->
+        <dependency>
+            <groupId>org.dspace</groupId>
+            <artifactId>dspace-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.dspace</groupId>
+            <artifactId>dspace-impl</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.dspace</groupId>
+            <artifactId>dspace-utils</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <!-- standard webapp stuff -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+        <!-- REST handler -->
+        <dependency>
+            <groupId>org.sakaiproject.entitybus</groupId>
+            <artifactId>entitybus-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.sakaiproject.entitybus</groupId>
+            <artifactId>entitybus-impl</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.sakaiproject.entitybus</groupId>
+            <artifactId>entitybus-rest</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.sakaiproject.entitybus</groupId>
+            <artifactId>entitybus-utils</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <!-- logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>dspace</finalName>
+        <plugins>
+            <!-- mvn jetty:run-war
+                 http://localhost:8080/dspace/
+                 http://mojo.codehaus.org/jetty-maven-plugin/usage.html -->
+            <plugin>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>maven-jetty-plugin</artifactId>
+                <configuration>
+                    <contextPathSpec>dspace</contextPathSpec>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
