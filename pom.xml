@@ -36,6 +36,12 @@
         </repository>
     </repositories>
     
+    <scm>
+        <connection>scm:svn:http://scm.dspace.org/svn/repo/dspace2/modules/rest/trunk</connection>
+        <developerConnection>scm:svn:https://scm.dspace.org/svn/repo/dspace2/modules/rest/trunk</developerConnection>
+        <url>http://scm.dspace.org/svn/repo/dspace2/modules/rest/trunk</url>
+    </scm>
+    
     <dependencies>
         <!-- all in one requires the api and impl bundled in with the rest webapp -->
         <dependency>
