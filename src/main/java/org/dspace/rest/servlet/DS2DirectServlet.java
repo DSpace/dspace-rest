@@ -36,6 +36,8 @@ import org.sakaiproject.entitybus.providers.EntityRequestHandler;
 import org.sakaiproject.entitybus.rest.EntityBrokerRESTServiceManager;
 import org.sakaiproject.entitybus.util.servlet.DirectServlet;
 
+// test
+
 /**
  * Direct servlet allows unfettered access to entity URLs within DSpace 2
  * and provides the EB REST access
