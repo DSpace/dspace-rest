@@ -12,6 +12,11 @@ import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityLastModified;
 import org.dspace.content.Community;
 import org.dspace.core.Context;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.sql.SQLException;
 
 /**
  *
@@ -23,41 +28,32 @@ public class CommunityEntity  {
    @EntityFieldRequired private Boolean canEdit;
    private String handle;
    private int type;
-   @EntityFieldRequired private String metadata;
-   
+   private int countItems;
+  // TODO check metadata possibility
 
-   //protected CommunityEntity() { };
-   
-   public CommunityEntity(String uid) //throws java.sql.SQLException {
-   {
+   protected CommunityEntity() {};
+
+   public CommunityEntity(String uid, Context context) throws SQLException {
        this.id = uid;
-       Community res = null;
-       try {
-       Context context = new Context();
-       res = Community.find(context, Integer.parseInt(uid)); }
-       catch (Exception ex) { };
-       //this.name = res.getName();
-       this.name = "ime";
-       this.canEdit = true;
-       this.handle="hendl;";
 
-       if (res != null) {
-        try {
-            this.canEdit = res.canEditBoolean();
-        } catch (Exception ex) { };
-        this.handle = res.getHandle();
-        this.name = res.getName();
-        this.type = res.getType();
-        //this.metadata = res.getMetadata("");
-       };
-       
+       Community res = Community.find(context, Integer.parseInt(uid));
+
+       this.canEdit = res.canEditBoolean();
+       this.handle = res.getHandle();
+       this.name = res.getName();
+       this.type = res.getType();
+       this.countItems = res.countItems();
    }
 
-
-   public CommunityEntity (boolean onlyTop) {
-
-   
+   public CommunityEntity(Community community) throws SQLException {
+        this.canEdit = community.canEditBoolean();
+        this.handle = community.getHandle();
+        this.name = community.getName();
+        this.type = community.getType();
+        this.id = Integer.toString(community.getID());
+        this.countItems = community.countItems();
    }
+
 
    public String getName() {
        return this.name;
@@ -65,6 +61,22 @@ public class CommunityEntity  {
 
    public String getHandle() {
        return this.handle;
+   }
+
+   public String getId() {
+       return this.id;
+   }
+
+   public boolean canEdit() {
+       return this.canEdit;
+   }
+
+   public int getType() {
+       return this.type;
+   }
+
+   public int getCountItems() {
+       return this.countItems;
    }
 
     @Override

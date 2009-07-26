@@ -40,7 +40,7 @@ public class DS16DirectServlet extends DirectServlet {
      * Starts up all the entity providers and places them into the list
      * @param entityProviderManager the provider manager
      */
-    protected void startProviders(EntityProviderManager entityProviderManager) {
+    protected void startProviders(EntityProviderManager entityProviderManager) throws java.sql.SQLException {
         String config = getServletContext().getInitParameter("dspace-config");
 
         // for dev testing only
@@ -51,7 +51,7 @@ public class DS16DirectServlet extends DirectServlet {
         org.dspace.core.ConfigurationManager.loadConfig(config);
         this.entityProviders = new Vector<AbstractRESTProvider>();
         this.entityProviders.add( new CommunitiesProvider(entityProviderManager) );
-        this.entityProviders.add( new StandardEntityProvider(entityProviderManager) );        
+        this.entityProviders.add( new StandardEntityProvider(entityProviderManager) );   
     }
 
     @Override
@@ -69,6 +69,8 @@ public class DS16DirectServlet extends DirectServlet {
             }
 
             EntityProviderManager epm = this.entityBrokerCoreServiceManager.getEntityProviderManager();
+            
+
             // fire up the providers
             startProviders(epm);
         } catch (Exception e) {

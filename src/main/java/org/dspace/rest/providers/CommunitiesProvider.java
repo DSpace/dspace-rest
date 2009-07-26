@@ -17,31 +17,27 @@ import org.sakaiproject.entitybus.entityprovider.EntityProviderManager;
 import org.sakaiproject.entitybus.entityprovider.capabilities.RESTful;
 import org.sakaiproject.entitybus.entityprovider.extension.Formats;
 import org.sakaiproject.entitybus.entityprovider.search.Search;
-import org.dspace.content.*;
-import org.dspace.core.*;
-
+import org.dspace.content.Community;
+import org.dspace.core.Context;
+import java.sql.SQLException;
 
 
 /**
- * A more typical example of an entity provider,
- * stores everything in memory
  *
- * @author Aaron Zeckoski (azeckoski @ gmail.com)
  */
 public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEntityProvider, RESTful {
     
-    public Map<String, StandardEntity> myEntities = new LinkedHashMap<String, StandardEntity>(4);
+    private Context context;
 
-    public CommunitiesProvider(EntityProviderManager entityProviderManager) {
+    public CommunitiesProvider(EntityProviderManager entityProviderManager) throws SQLException {
         super(entityProviderManager);
-        init( new String[] {"aaa","bbb","ccc"} );
+        context = new Context();
+
+        //CustomAction customAction = entityActionsManager.
+        entityProviderManager.registerEntityProvider(this);
+
     }
 
-    public void init(String[] ids) {
-        for (int i = 0; i < ids.length; i++) {
-            myEntities.put(ids[i], new StandardEntity(ids[i], "aaron" + i, i) );
-        }
-    }
     /* (non-Javadoc)
      * @see org.sakaiproject.entitybus.entityprovider.EntityProvider#getEntityPrefix()
      */
@@ -50,46 +46,48 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
         return "communities";
     }
 
+    public boolean entityExists(String id)  {
 
-    public boolean entityExists(String id) {
-
-        if (id.equals("mika")) {
-            return true;
-        } else
-        return myEntities.containsKey(id);
-        //return false;
+        boolean result = false;
+        try {
+            Community comm = Community.find(context, Integer.parseInt(id));
+            if (comm != null)
+                result = true;
+        } catch (SQLException ex) {
+            result = false;
+        }
+        return result;
     }
 
 
-    public Object getEntity(EntityReference reference)  {
-
+    public Object getEntity(EntityReference reference) {
 
         if (reference.getId() == null) {
             return new StandardEntity();
         }
-        if (myEntities.containsKey(reference.getId())) {
-            return myEntities.get( reference.getId() );
-        }
-        if (reference.getId().contentEquals("mika")) {
-            String izlaz= "";
-            Context context = null;
-            Community[] communities = null;
+        if (entityExists(reference.getId())) {
             try {
-            context = new Context(); 
-            communities = Community.findAll(context);  } catch (Exception ex) {izlaz=izlaz+ex.toString();};
-            return "Result " + izlaz + " com: " + communities.length +  " br.";
+                return new CommunityEntity(reference.getId(), context);
+            } catch (SQLException ex) {
+                throw new IllegalArgumentException("Invalid id:" + reference.getId());
+            }
         }
         throw new IllegalArgumentException("Invalid id:" + reference.getId());
     }
 
     public List<?> getEntities(EntityReference ref, Search search) {
-//        List<StandardEntity> entities = new ArrayList<StandardEntity>();
-        List<CommunityEntity> entities = new ArrayList<CommunityEntity>();
-        //try {
-        entities.add(new CommunityEntity("1"));
-        entities.add(new CommunityEntity("2"));
+          List<CommunityEntity> entities = new ArrayList<CommunityEntity>();
 
-        //} catch (java.sql.SQLException ex) {};
+          try {
+            Community[] communities = null;
+            Context context = new Context();
+            communities = Community.findAll(context);
+            for (int x=0; x<communities.length; x++) {
+                entities.add(new CommunityEntity(communities[x]));
+                }
+            }
+     catch (Exception ex) { };
+
 /*
         if (search.isEmpty()) {
             // return all
