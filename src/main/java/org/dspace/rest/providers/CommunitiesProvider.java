@@ -6,21 +6,25 @@
 package org.dspace.rest.providers;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServlet;
 import org.sakaiproject.entitybus.EntityReference;
+import org.sakaiproject.entitybus.EntityView;
 import org.sakaiproject.entitybus.entityprovider.CoreEntityProvider;
 import org.sakaiproject.entitybus.entityprovider.EntityProviderManager;
 import org.sakaiproject.entitybus.entityprovider.capabilities.RESTful;
 import org.sakaiproject.entitybus.entityprovider.extension.Formats;
 import org.sakaiproject.entitybus.entityprovider.search.Search;
+import org.sakaiproject.entitybus.entityprovider.annotations.EntityCustomAction;
 import org.dspace.content.Community;
 import org.dspace.core.Context;
 import java.sql.SQLException;
-
+import org.dspace.rest.entities.*;
+import org.dspace.rest.util.CommunityHelper;
+import org.sakaiproject.entitybus.exception.EntityException;
+import org.sakaiproject.entitybus.exception.EntityEncodingException;
+import org.dspace.app.webui.components.RecentSubmissionsException;
 
 /**
  *
@@ -32,19 +36,80 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
     public CommunitiesProvider(EntityProviderManager entityProviderManager) throws SQLException {
         super(entityProviderManager);
         context = new Context();
-
-        //CustomAction customAction = entityActionsManager.
         entityProviderManager.registerEntityProvider(this);
-
     }
-
-    /* (non-Javadoc)
-     * @see org.sakaiproject.entitybus.entityprovider.EntityProvider#getEntityPrefix()
-     */
 
     public String getEntityPrefix() {
         return "communities";
     }
+
+
+    @EntityCustomAction(action="parents", viewKey=EntityView.VIEW_SHOW)
+    public Object parents(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
+        String id = reference.getId();
+        boolean idOnly = false;
+        boolean immediateOnly = true;
+
+        if (params.containsKey("immediateOnly") && params.get("immediateOnly").equals("false"))
+            immediateOnly = false;
+
+        if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
+            idOnly = true;
+
+        if (entityExists(reference.getId())) 
+            return CommunityHelper.getObjects(id, context, CommunityHelper.PARENTS, idOnly, immediateOnly);
+
+        throw new IllegalArgumentException("Invalid id:" + reference.getId());
+    }
+
+
+    @EntityCustomAction(action="children", viewKey=EntityView.VIEW_SHOW)
+    public Object children(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
+        String id = reference.getId();
+        boolean idOnly = false;
+        boolean immediateOnly = true;
+
+        if (params.containsKey("immediateOnly") && params.get("immediateOnly").equals("false"))
+            immediateOnly = false;
+
+        if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
+            idOnly = true;
+
+        if (entityExists(reference.getId()))
+            return CommunityHelper.getObjects(id, context, CommunityHelper.CHILDREN, idOnly, immediateOnly);
+
+        throw new IllegalArgumentException("Invalid id:" + reference.getId());
+    }
+
+
+    @EntityCustomAction(action="collections", viewKey=EntityView.VIEW_SHOW)
+    public Object collections(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
+        String id = reference.getId();
+        boolean idOnly = false;
+
+        if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
+            idOnly = true;
+
+        if (entityExists(reference.getId())) 
+            return CommunityHelper.getObjects(id, context, CommunityHelper.COLLECTIONS, idOnly);
+
+        throw new IllegalArgumentException("Invalid id:" + reference.getId());
+    }
+
+    @EntityCustomAction(action="recent", viewKey=EntityView.VIEW_SHOW)
+    public Object recentSubmissions(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
+        String id = reference.getId();
+        boolean idOnly = false;
+
+        if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
+            idOnly = true;
+
+        if (entityExists(reference.getId()))
+            return CommunityHelper.getObjects(id, context, CommunityHelper.RECENT_SUBMISSIONS, idOnly);
+
+        throw new IllegalArgumentException("Invalid id:" + reference.getId());
+    }
+
 
     public boolean entityExists(String id)  {
 
@@ -61,13 +126,16 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
 
 
     public Object getEntity(EntityReference reference) {
-
         if (reference.getId() == null) {
             return new StandardEntity();
         }
         if (entityExists(reference.getId())) {
             try {
-                return new CommunityEntity(reference.getId(), context);
+                // TODO Figure out how to get query parameters here
+    //            if (params.get("topLevelOnly").equals("true"))
+//                    return new CommunityEntityId(reference.getId(), context);
+      //          else
+                    return new CommunityEntity(reference.getId(), context);
             } catch (SQLException ex) {
                 throw new IllegalArgumentException("Invalid id:" + reference.getId());
             }
@@ -82,6 +150,7 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
             Community[] communities = null;
             Context context = new Context();
             communities = Community.findAll(context);
+
             for (int x=0; x<communities.length; x++) {
                 entities.add(new CommunityEntity(communities[x]));
                 }
@@ -125,28 +194,8 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
      * {@inheritDoc}
      */
     public String createEntity(EntityReference ref, Object entity, Map<String, Object> params) {
-/*
-        StandardEntity me = (StandardEntity) entity;
-        if (me.getStuff() == null || "".equals(me.getStuff())) {
-            throw new IllegalArgumentException("stuff is not set, it is required");
-        }
-        String newId = me.getId();
-        int counter = 0;
-        if (newId == null || "".equals(newId)) {
-            newId = null;
-            while (newId == null) {
-                String id = "my"+counter++;
-                if (! myEntities.containsKey(id)) {
-                    newId = id;
-                }
-            }
-            me.setId( newId );
-        }
-        myEntities.put(newId, me);
-        return newId;
-*/
-        return "entitet";
-        }
+        return "none";
+    }
 
     /**
      * Expects {@link StandardEntity} objects
@@ -155,26 +204,10 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
 
     public void updateEntity(EntityReference ref, Object entity, Map<String, Object> params) {
 
-        /*
-        StandardEntity me = (StandardEntity) entity;
-        if (me.getStuff() == null) {
-            throw new IllegalArgumentException("stuff is not set, it is required");
-        }
-        StandardEntity current = myEntities.get(ref.getId());
-        if (current == null) {
-            throw new IllegalArgumentException("Invalid update, cannot find entity");
-        }
-        // update the fields
-        current.setStuff( me.getStuff() );
-        current.setNumber( me.getNumber() );
-        current.extra = me.extra;
-*/
- }
+    }
 
     public void deleteEntity(EntityReference ref, Map<String, Object> params) {
-//        if (myEntities.remove(ref.getId()) == null) {
-//            throw new IllegalArgumentException("Invalid entity id, cannot find entity to remove: " + ref);
-//        }
+
     }
 
     public String[] getHandledOutputFormats() {

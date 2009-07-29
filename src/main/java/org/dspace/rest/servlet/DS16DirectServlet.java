@@ -20,6 +20,7 @@ import org.sakaiproject.entitybus.util.servlet.DirectServlet;
 import org.dspace.rest.providers.AbstractRESTProvider;
 import org.dspace.rest.providers.CommunitiesProvider;
 import org.dspace.rest.providers.StandardEntityProvider;
+import org.dspace.rest.providers.TestEntityProvider;
 
 import org.dspace.content.*;
 import org.dspace.core.*;
@@ -51,7 +52,8 @@ public class DS16DirectServlet extends DirectServlet {
         org.dspace.core.ConfigurationManager.loadConfig(config);
         this.entityProviders = new Vector<AbstractRESTProvider>();
         this.entityProviders.add( new CommunitiesProvider(entityProviderManager) );
-        this.entityProviders.add( new StandardEntityProvider(entityProviderManager) );   
+        this.entityProviders.add( new StandardEntityProvider(entityProviderManager) );
+        this.entityProviders.add( new TestEntityProvider(entityProviderManager) );
     }
 
     @Override
