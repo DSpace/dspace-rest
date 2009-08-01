@@ -59,6 +59,9 @@ public class CollectionEntity {
        return this.canEdit;
    }
 
+   public int getId() {
+       return this.id;
+   }
 
    public int getType() {
       return this.type;

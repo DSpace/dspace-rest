@@ -19,6 +19,9 @@ import org.sakaiproject.entitybus.entityprovider.extension.Formats;
 import org.sakaiproject.entitybus.entityprovider.search.Search;
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityCustomAction;
 import org.dspace.content.Community;
+import org.dspace.content.Collection;
+import org.dspace.content.Item;
+import org.dspace.content.ItemIterator;
 import org.dspace.core.Context;
 import java.sql.SQLException;
 import org.dspace.rest.entities.*;
@@ -29,13 +32,14 @@ import org.dspace.app.webui.components.RecentSubmissionsException;
 
 /**
  *
+ * @author Bojan Suzic, bojan.suzic@gmail.com
  */
-public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEntityProvider, RESTful  {
-    
+public class ItemsProvider extends AbstractRESTProvider implements  CoreEntityProvider, RESTful {
+
     private Context context;
     private RequestStorage reqStor;
 
-    public CommunitiesProvider(EntityProviderManager entityProviderManager) throws SQLException {
+    public ItemsProvider(EntityProviderManager entityProviderManager) throws SQLException {
         super(entityProviderManager);
         context = new Context();
         entityProviderManager.registerEntityProvider(this);
@@ -43,43 +47,36 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
     }
 
     public String getEntityPrefix() {
-        return "communities";
+        return "items";
     }
 
 
-    @EntityCustomAction(action="parents", viewKey=EntityView.VIEW_SHOW)
-    public Object parents(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
+    @EntityCustomAction(action="permissions", viewKey=EntityView.VIEW_SHOW)
+    public Object permissions(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
         String id = reference.getId();
         boolean idOnly = false;
-        boolean immediateOnly = true;
-
-        if (params.containsKey("immediateOnly") && params.get("immediateOnly").equals("false"))
-            immediateOnly = false;
-
-        if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
-            idOnly = true;
-
-        if (entityExists(reference.getId())) 
-            return CommunityHelper.getObjects(id, context, CommunityHelper.PARENTS, idOnly, immediateOnly);
-
-        throw new IllegalArgumentException("Invalid id:" + reference.getId());
-    }
-
-
-    @EntityCustomAction(action="children", viewKey=EntityView.VIEW_SHOW)
-    public Object children(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
-        String id = reference.getId();
-        boolean idOnly = false;
-        boolean immediateOnly = true;
-
-        if (params.containsKey("immediateOnly") && params.get("immediateOnly").equals("false"))
-            immediateOnly = false;
 
         if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
             idOnly = true;
 
         if (entityExists(reference.getId()))
-            return CommunityHelper.getObjects(id, context, CommunityHelper.CHILDREN, idOnly, immediateOnly);
+            return CommunityHelper.getObjects(id, context, CommunityHelper.ITEM_PERMISSION);
+
+        throw new IllegalArgumentException("Invalid id:" + reference.getId());
+    }
+
+
+    @EntityCustomAction(action="communities", viewKey=EntityView.VIEW_SHOW)
+    public Object communities(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
+        String id = reference.getId();
+        boolean idOnly = false;
+        boolean in_archive = false;
+
+        if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
+            idOnly = true;
+
+        if (entityExists(reference.getId()))
+            return CommunityHelper.getObjects(id, context, CommunityHelper.ITEM_IN_COMMUNITIES, idOnly);
 
         throw new IllegalArgumentException("Invalid id:" + reference.getId());
     }
@@ -89,26 +86,13 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
     public Object collections(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
         String id = reference.getId();
         boolean idOnly = false;
-
-        if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
-            idOnly = true;
-
-        if (entityExists(reference.getId())) 
-            return CommunityHelper.getObjects(id, context, CommunityHelper.COLLECTIONS, idOnly);
-
-        throw new IllegalArgumentException("Invalid id:" + reference.getId());
-    }
-
-    @EntityCustomAction(action="recent", viewKey=EntityView.VIEW_SHOW)
-    public Object recentSubmissions(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
-        String id = reference.getId();
-        boolean idOnly = false;
+        boolean in_archive = false;
 
         if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
             idOnly = true;
 
         if (entityExists(reference.getId()))
-            return CommunityHelper.getObjects(id, context, CommunityHelper.RECENT_SUBMISSIONS, idOnly);
+            return CommunityHelper.getObjects(id, context, CommunityHelper.ITEM_IN_COLLECTIONS, idOnly);
 
         throw new IllegalArgumentException("Invalid id:" + reference.getId());
     }
@@ -118,8 +102,8 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
 
         boolean result = false;
         try {
-            Community comm = Community.find(context, Integer.parseInt(id));
-            if (comm != null)
+            Item col = Item.find(context, Integer.parseInt(id));
+            if (col != null)
                 result = true;
         } catch (SQLException ex) {
             result = false;
@@ -141,9 +125,9 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
             try {
 
                 if (idOnly)
-                    return new CommunityEntityId(reference.getId(), context);
+                    return new ItemEntityId(reference.getId(), context);
                 else
-                    return new CommunityEntity(reference.getId(), context);
+                    return new ItemEntity(reference.getId(), context);
             } catch (SQLException ex) {
                 throw new IllegalArgumentException("Invalid id:" + reference.getId());
             }
@@ -152,24 +136,21 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
     }
 
     public List<?> getEntities(EntityReference ref, Search search) {
-          boolean topLevelOnly;
           boolean idOnly;
-          try {
-          topLevelOnly = !reqStor.getStoredValue("topLevelOnly").equals("false");
-          } catch (NullPointerException ex) { topLevelOnly = true; };
           try {
           idOnly = reqStor.getStoredValue("idOnly").equals("true");
           } catch (NullPointerException ex) { idOnly = false; };
 
           List<Object> entities = new ArrayList<Object>();
 
+          System.out.println ("trying...");
           try {
-            Community[] communities = null;
             Context context = new Context();
-            communities = topLevelOnly ? Community.findAllTop(context) : Community.findAll(context);
+            ItemIterator items = Item.findAll(context);
 
-            for (int x=0; x<communities.length; x++) {
-                entities.add(idOnly ? new CommunityEntityId(communities[x]) : new CommunityEntity(communities[x]));
+
+            while (items.hasNext()) {
+                entities.add(idOnly ? new ItemEntityId(items.next()) : new ItemEntity(items.next()));
                 }
             }
      catch (Exception ex) { };
@@ -234,5 +215,6 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
      public String[] getHandledInputFormats() {
         return new String[] {Formats.HTML, Formats.JSON, Formats.XML};
      }
+
 
 }
