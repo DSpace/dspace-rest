@@ -7,7 +7,8 @@ package org.dspace.rest.providers;
 
 import org.sakaiproject.entitybus.entityprovider.EntityProvider;
 import org.sakaiproject.entitybus.entityprovider.EntityProviderManager;
-
+import org.dspace.core.Context;
+import org.sakaiproject.entitybus.entityprovider.extension.RequestStorage;
 
 /**
  * Makes it easier to write {@link EntityProvider}s in webapps <br/>
@@ -18,6 +19,9 @@ import org.sakaiproject.entitybus.entityprovider.EntityProviderManager;
  * @author Aaron Zeckoski (aaron@caret.cam.ac.uk)
  */
 public abstract class AbstractRESTProvider implements EntityProvider {
+    protected Context context;
+    protected RequestStorage reqStor;
+    boolean idOnly;
 
     public AbstractRESTProvider(EntityProviderManager entityProviderManager) {
         this.entityProviderManager = entityProviderManager;
@@ -26,6 +30,9 @@ public abstract class AbstractRESTProvider implements EntityProvider {
         } catch (Exception e) {
             throw new RuntimeException("Unable to register the provider ("+this+"): " + e, e);
         }
+        try {
+            idOnly = reqStor.getStoredValue("idOnly").equals("true");
+        } catch (NullPointerException ex) { idOnly = false; };
     }
 
     private EntityProviderManager entityProviderManager;

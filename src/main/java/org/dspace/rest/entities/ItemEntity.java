@@ -10,6 +10,7 @@ import org.sakaiproject.entitybus.entityprovider.annotations.EntityFieldRequired
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
 import org.dspace.content.Item;
 import org.dspace.content.Bundle;
+import org.dspace.content.Bitstream;
 import org.dspace.core.Context;
 import java.util.List;
 import java.util.ArrayList;
@@ -28,12 +29,15 @@ public class ItemEntity {
    private String handle;
    private int type;
    List<String> bundles = new ArrayList<String>();
-  // TODO inspect and add additional fields
+   List<String> bitstreams = new ArrayList<String>();
+
+   // TODO inspect and add additional fields
 
 
    public ItemEntity(String uid, Context context) throws SQLException {
        Item res = Item.find(context, Integer.parseInt(uid));
        Bundle[] bun = res.getBundles();
+       Bitstream[] bst = res.getNonInternalBitstreams();
        this.id = res.getID();
        this.canEdit = res.canEdit();
        this.handle = res.getHandle();
@@ -41,6 +45,8 @@ public class ItemEntity {
        this.type = res.getType();
        for (Bundle b : bun)
            this.bundles.add(b.getName());
+       for (Bitstream b : bst)
+           this.bitstreams.add(b.getName());
    }
 
    public ItemEntity(Item item) throws SQLException {
@@ -49,11 +55,21 @@ public class ItemEntity {
         this.name = item.getName();
         this.type = item.getType();
         this.id = item.getID();
+        Bundle[] bun = item.getBundles();
+        Bitstream[] bst = item.getNonInternalBitstreams();
+        for (Bundle b : bun)
+            this.bundles.add(b.getName());
+        for (Bitstream b : bst)
+            this.bitstreams.add(b.getName());
    }
 
 
    public String getName() {
        return this.name;
+   }
+
+   public List getBitstreams() {
+       return this.bitstreams;
    }
 
    public String getHandle() {

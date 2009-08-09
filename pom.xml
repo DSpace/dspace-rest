@@ -37,7 +37,7 @@
 
             <repository>
             <id>central</id>
-            <name>DSpace Snapshot Repository</name>
+            <name>Maven central repository</name>
             <url>http://repo2.maven.org/maven2</url>
             <releases>
                 <enabled>false</enabled>
@@ -61,6 +61,29 @@
             <name>jbos repository</name>
             <url>http://repository.jboss.com/maven2</url>
         </repository>
+
+        <repository>
+            <id>apache repository</id>
+            <name>apache rep</name>
+            <url>https://repository.apache.org/content/repositories/releases/</url>
+            <layout>default</layout>
+        </repository>
+
+        <repository>
+            <id>codehaus repository</id>
+            <name>codehaus rep</name>
+            <url>http://repo2.maven.org/maven2</url>
+            <layout>default</layout>
+        </repository>
+
+        <repository>
+            <id>sakaiproject repository</id>
+            <name>sakai rep</name>
+            <url>http://source.sakaiproject.org/maven2/</url>
+            <layout>default</layout>
+        </repository>
+
+
     </repositories>
     
     <scm>

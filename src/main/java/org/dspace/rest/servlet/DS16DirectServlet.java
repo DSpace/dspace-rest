@@ -21,7 +21,12 @@ import org.dspace.rest.providers.AbstractRESTProvider;
 import org.dspace.rest.providers.CommunitiesProvider;
 import org.dspace.rest.providers.StandardEntityProvider;
 import org.dspace.rest.providers.TestEntityProvider;
-
+import org.dspace.rest.providers.CollectionsProvider;
+import org.dspace.rest.providers.BitstreamProvider;
+import org.dspace.rest.providers.ItemsProvider;
+import org.dspace.rest.providers.StatsProvider;
+import org.dspace.rest.providers.UserEntityProvider;
+import org.dspace.rest.providers.AbstractBaseProvider;
 import org.dspace.content.*;
 import org.dspace.core.*;
 
@@ -35,7 +40,7 @@ public class DS16DirectServlet extends DirectServlet {
     private transient EntityBrokerCoreServiceManager entityBrokerCoreServiceManager;
     private transient EntityBrokerRESTServiceManager entityRESTServiceManager;
 
-    private transient List<AbstractRESTProvider> entityProviders;
+    private transient List<AbstractBaseProvider> entityProviders;
 
     /**
      * Starts up all the entity providers and places them into the list
@@ -48,12 +53,18 @@ public class DS16DirectServlet extends DirectServlet {
         if (config.contains("dspace.dir")) {
             config = "/dspace/config/dspace.cfg";
         }
-
-        org.dspace.core.ConfigurationManager.loadConfig(config);
-        this.entityProviders = new Vector<AbstractRESTProvider>();
-        this.entityProviders.add( new CommunitiesProvider(entityProviderManager) );
+    
+        ConfigurationManager.loadConfig(config);
+//        this.entityProviders = new Vector<AbstractRESTProvider>();
+        this.entityProviders = new Vector<AbstractBaseProvider>();
+/*        this.entityProviders.add( new CommunitiesProvider(entityProviderManager) );
         this.entityProviders.add( new StandardEntityProvider(entityProviderManager) );
         this.entityProviders.add( new TestEntityProvider(entityProviderManager) );
+        this.entityProviders.add( new CollectionsProvider(entityProviderManager) );
+        this.entityProviders.add( new ItemsProvider(entityProviderManager) );
+        this.entityProviders.add( new BitstreamProvider(entityProviderManager) );
+        this.entityProviders.add( new StatsProvider(entityProviderManager) );
+  */      this.entityProviders.add( new UserEntityProvider(entityProviderManager) );
     }
 
     @Override
@@ -86,7 +97,8 @@ public class DS16DirectServlet extends DirectServlet {
     public void destroy() {
         super.destroy();
         if (this.entityProviders != null) {
-            for (AbstractRESTProvider provider : entityProviders) {
+//            for (AbstractRESTProvider provider : entityProviders) {
+            for (AbstractBaseProvider provider : entityProviders) {
                 if (provider != null) {
                     try {
                         provider.destroy();
