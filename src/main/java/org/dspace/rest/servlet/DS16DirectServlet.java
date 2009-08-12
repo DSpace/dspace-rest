@@ -55,16 +55,13 @@ public class DS16DirectServlet extends DirectServlet {
         }
     
         ConfigurationManager.loadConfig(config);
-//        this.entityProviders = new Vector<AbstractRESTProvider>();
         this.entityProviders = new Vector<AbstractBaseProvider>();
-/*        this.entityProviders.add( new CommunitiesProvider(entityProviderManager) );
-        this.entityProviders.add( new StandardEntityProvider(entityProviderManager) );
-        this.entityProviders.add( new TestEntityProvider(entityProviderManager) );
+        this.entityProviders.add( new BitstreamProvider(entityProviderManager) );
+        this.entityProviders.add( new CommunitiesProvider(entityProviderManager) );
         this.entityProviders.add( new CollectionsProvider(entityProviderManager) );
         this.entityProviders.add( new ItemsProvider(entityProviderManager) );
-        this.entityProviders.add( new BitstreamProvider(entityProviderManager) );
         this.entityProviders.add( new StatsProvider(entityProviderManager) );
-  */      this.entityProviders.add( new UserEntityProvider(entityProviderManager) );
+        this.entityProviders.add( new UserEntityProvider(entityProviderManager) );
     }
 
     @Override
@@ -130,5 +127,4 @@ public class DS16DirectServlet extends DirectServlet {
         // attempt basic auth first?
         throw new SecurityException("Not able to handle login redirects yet");
     }
-
 }

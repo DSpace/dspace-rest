@@ -13,33 +13,22 @@ import org.sakaiproject.entitybus.EntityReference;
 import org.sakaiproject.entitybus.EntityView;
 import org.sakaiproject.entitybus.entityprovider.CoreEntityProvider;
 import org.sakaiproject.entitybus.entityprovider.EntityProviderManager;
-import org.sakaiproject.entitybus.entityprovider.capabilities.RESTful;
-import org.sakaiproject.entitybus.entityprovider.extension.RequestStorage;
-import org.sakaiproject.entitybus.entityprovider.extension.Formats;
 import org.sakaiproject.entitybus.entityprovider.search.Search;
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityCustomAction;
 import org.dspace.content.Community;
-import org.dspace.core.Context;
 import java.sql.SQLException;
 import org.dspace.rest.entities.*;
 import org.dspace.rest.util.CommunityHelper;
-import org.sakaiproject.entitybus.exception.EntityException;
-import org.sakaiproject.entitybus.exception.EntityEncodingException;
 import org.dspace.app.webui.components.RecentSubmissionsException;
 
 /**
  *
  */
-public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEntityProvider, RESTful  {
-    
-    private Context context;
-    private RequestStorage reqStor;
+public class CommunitiesProvider extends AbstractBaseProvider implements  CoreEntityProvider  {
 
     public CommunitiesProvider(EntityProviderManager entityProviderManager) throws SQLException {
         super(entityProviderManager);
-        context = new Context();
         entityProviderManager.registerEntityProvider(this);
-        this.reqStor = entityProviderManager.getRequestStorage();
     }
 
     public String getEntityPrefix() {
@@ -50,14 +39,7 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
     @EntityCustomAction(action="parents", viewKey=EntityView.VIEW_SHOW)
     public Object parents(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
         String id = reference.getId();
-        boolean idOnly = false;
-        boolean immediateOnly = true;
-
-        if (params.containsKey("immediateOnly") && params.get("immediateOnly").equals("false"))
-            immediateOnly = false;
-
-        if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
-            idOnly = true;
+        refreshParams();
 
         if (entityExists(reference.getId())) 
             return CommunityHelper.getObjects(id, context, CommunityHelper.PARENTS, idOnly, immediateOnly);
@@ -69,14 +51,7 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
     @EntityCustomAction(action="children", viewKey=EntityView.VIEW_SHOW)
     public Object children(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
         String id = reference.getId();
-        boolean idOnly = false;
-        boolean immediateOnly = true;
-
-        if (params.containsKey("immediateOnly") && params.get("immediateOnly").equals("false"))
-            immediateOnly = false;
-
-        if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
-            idOnly = true;
+        refreshParams();
 
         if (entityExists(reference.getId()))
             return CommunityHelper.getObjects(id, context, CommunityHelper.CHILDREN, idOnly, immediateOnly);
@@ -88,10 +63,7 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
     @EntityCustomAction(action="collections", viewKey=EntityView.VIEW_SHOW)
     public Object collections(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
         String id = reference.getId();
-        boolean idOnly = false;
-
-        if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
-            idOnly = true;
+        refreshParams();
 
         if (entityExists(reference.getId())) 
             return CommunityHelper.getObjects(id, context, CommunityHelper.COLLECTIONS, idOnly);
@@ -102,10 +74,7 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
     @EntityCustomAction(action="recent", viewKey=EntityView.VIEW_SHOW)
     public Object recentSubmissions(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
         String id = reference.getId();
-        boolean idOnly = false;
-
-        if (params.containsKey("idOnly") && params.get("idOnly").equals("true"))
-            idOnly = true;
+        refreshParams();
 
         if (entityExists(reference.getId()))
             return CommunityHelper.getObjects(id, context, CommunityHelper.RECENT_SUBMISSIONS, idOnly);
@@ -115,6 +84,9 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
 
 
     public boolean entityExists(String id)  {
+        // sample entity
+        if (id.equals(":ID:"))
+            return true;
 
         boolean result = false;
         try {
@@ -129,17 +101,16 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
 
 
     public Object getEntity(EntityReference reference) {
-          boolean idOnly;
-          try {
-          idOnly = reqStor.getStoredValue("idOnly").equals("true");
-          } catch (NullPointerException ex) { idOnly = false; };
+         refreshParams();
+        // sample entity
+        if (reference.getId().equals(":ID:"))
+            return new CommunityEntity();
 
         if (reference.getId() == null) {
             return new StandardEntity();
         }
         if (entityExists(reference.getId())) {
             try {
-
                 if (idOnly)
                     return new CommunityEntityId(reference.getId(), context);
                 else
@@ -152,87 +123,23 @@ public class CommunitiesProvider extends AbstractRESTProvider implements  CoreEn
     }
 
     public List<?> getEntities(EntityReference ref, Search search) {
-          boolean topLevelOnly;
-          boolean idOnly;
-          try {
-          topLevelOnly = !reqStor.getStoredValue("topLevelOnly").equals("false");
-          } catch (NullPointerException ex) { topLevelOnly = true; };
-          try {
-          idOnly = reqStor.getStoredValue("idOnly").equals("true");
-          } catch (NullPointerException ex) { idOnly = false; };
-
+          refreshParams();
           List<Object> entities = new ArrayList<Object>();
 
           try {
             Community[] communities = null;
-            Context context = new Context();
             communities = topLevelOnly ? Community.findAllTop(context) : Community.findAll(context);
 
-            for (int x=0; x<communities.length; x++) {
-                entities.add(idOnly ? new CommunityEntityId(communities[x]) : new CommunityEntity(communities[x]));
-                }
+            for (Community c: communities)
+                entities.add(idOnly ? new CommunityEntityId(c) : new CommunityEntity(c));
             }
      catch (Exception ex) { };
 
-/*
-        if (search.isEmpty()) {
-            // return all
-            for (StandardEntity myEntity : myEntities.values()) {
-                entities.add( myEntity );
-            }
-        } else {
-            // restrict based on search param
-            if (search.getRestrictionByProperty("stuff") != null) {
-                for (StandardEntity me : myEntities.values()) {
-                    String sMatch = search.getRestrictionByProperty("stuff").value.toString();
-                    if (sMatch.equals(me.getStuff())) {
-                        entities.add(me);
-                    }
-                }
-            }
-        }
- */
         return entities;
     }
 
-
-    /**
-     * Returns {@link StandardEntity} objects with no id, default number to 10
-     * {@inheritDoc}
-     */
-
     public Object getSampleEntity() {
-        return new StandardEntity(null, 10);
-    //    return new Object();
+        return new CollectionEntity();
     }
-
-    /**
-     * Expects {@link StandardEntity} objects
-     * {@inheritDoc}
-     */
-    public String createEntity(EntityReference ref, Object entity, Map<String, Object> params) {
-        return "none";
-    }
-
-    /**
-     * Expects {@link StandardEntity} objects
-     * {@inheritDoc}
-     */
-
-    public void updateEntity(EntityReference ref, Object entity, Map<String, Object> params) {
-
-    }
-
-    public void deleteEntity(EntityReference ref, Map<String, Object> params) {
-
-    }
-
-    public String[] getHandledOutputFormats() {
-        return new String[] {Formats.HTML, Formats.JSON, Formats.XML, Formats.FORM};
-     }
-
-     public String[] getHandledInputFormats() {
-        return new String[] {Formats.HTML, Formats.JSON, Formats.XML};
-     }
 
 }

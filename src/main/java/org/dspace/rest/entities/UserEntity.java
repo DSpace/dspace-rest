@@ -11,9 +11,6 @@ import org.dspace.eperson.EPerson;
 import org.dspace.core.Context;
 import java.sql.SQLException;
 
-// napomena: kod izvorisne klase staviti varijable, kod naslednika ih izbrisati
-// i kod konstruktora pozvati super kako vec ide i odgovara, na drugim mjestima
-
 /**
  *
  * @author Bojan Suzic, bojan.suzic@gmail.com
@@ -25,8 +22,6 @@ public class UserEntity extends UserEntityId {
    private String handle, email, firstName, lastName, fullName,
            language, netId;
    private int type;
-  // TODO check metadata possibility
-
 
    public UserEntity(String uid, Context context) throws SQLException {
        super(uid, context);
@@ -52,11 +47,11 @@ public class UserEntity extends UserEntityId {
             this.email = eperson.getEmail();
             this.firstName = eperson.getFirstName();
             this.fullName = eperson.getFullName();
-            this.requireCertificate = res.getRequireCertificate();
-            this.selfRegistered = res.getSelfRegistered();
-            this.language = res.getLanguage();
-            this.lastName = res.getLastName();
-            this.netId = res.getNetid();
+            this.requireCertificate = eperson.getRequireCertificate();
+            this.selfRegistered = eperson.getSelfRegistered();
+            this.language = eperson.getLanguage();
+            this.lastName = eperson.getLastName();
+            this.netId = eperson.getNetid();
         }
         catch (Exception ex) { }
    }

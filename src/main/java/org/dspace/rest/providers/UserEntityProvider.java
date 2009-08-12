@@ -7,25 +7,13 @@ package org.dspace.rest.providers;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 import org.sakaiproject.entitybus.EntityReference;
-import org.sakaiproject.entitybus.EntityView;
 import org.sakaiproject.entitybus.entityprovider.CoreEntityProvider;
 import org.sakaiproject.entitybus.entityprovider.EntityProviderManager;
-import org.sakaiproject.entitybus.entityprovider.capabilities.RESTful;
-import org.sakaiproject.entitybus.entityprovider.extension.RequestStorage;
-import org.sakaiproject.entitybus.entityprovider.extension.Formats;
 import org.sakaiproject.entitybus.entityprovider.search.Search;
-import org.sakaiproject.entitybus.entityprovider.annotations.EntityCustomAction;
 import org.dspace.eperson.EPerson;
-import org.dspace.core.Context;
 import java.sql.SQLException;
 import org.dspace.rest.entities.*;
-import org.dspace.rest.util.CommunityHelper;
-import org.sakaiproject.entitybus.exception.EntityException;
-import org.sakaiproject.entitybus.exception.EntityEncodingException;
-import org.dspace.app.webui.components.RecentSubmissionsException;
 
 /**
  * 
@@ -34,9 +22,7 @@ public class UserEntityProvider extends AbstractBaseProvider implements CoreEnti
 
     public UserEntityProvider(EntityProviderManager entityProviderManager) throws SQLException {
         super(entityProviderManager);
-        context = new Context();
         entityProviderManager.registerEntityProvider(this);
-//        this.reqStor = entityProviderManager.getRequestStorage();
     }
 
     public String getEntityPrefix() {
@@ -91,7 +77,7 @@ public class UserEntityProvider extends AbstractBaseProvider implements CoreEnti
 
           try {
             EPerson[] epersons = null;
-            if ((query != "")||(_start != 0)||(_limit !=0))
+            if (!(query.equals(""))||(_start != 0)||(_limit !=0))
                 epersons = EPerson.search(context, query, _start, _limit);
             else
                 epersons = EPerson.findAll(context, sort);
@@ -105,8 +91,7 @@ public class UserEntityProvider extends AbstractBaseProvider implements CoreEnti
 
 
     /**
-     * Returns {@link StandardEntity} objects with no id, default number to 10
-     * {@inheritDoc}
+     * Returns a Entity object with sample data
      */
 
     public Object getSampleEntity() {

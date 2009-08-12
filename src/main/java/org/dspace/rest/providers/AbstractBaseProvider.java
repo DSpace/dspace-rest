@@ -7,7 +7,6 @@ package org.dspace.rest.providers;
 
 import org.sakaiproject.entitybus.entityprovider.EntityProvider;
 import org.sakaiproject.entitybus.entityprovider.EntityProviderManager;
-import org.sakaiproject.entitybus.entityprovider.capabilities.RESTful;
 import org.sakaiproject.entitybus.entityprovider.capabilities.*;
 import org.sakaiproject.entitybus.entityprovider.extension.RequestStorage;
 import org.sakaiproject.entitybus.entityprovider.extension.Formats;
@@ -33,7 +32,7 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
 
     // query parameters used in subclasses
     protected RequestStorage reqStor;
-    protected boolean idOnly, topLevelOnly;
+    protected boolean idOnly, topLevelOnly, in_archive, immediateOnly;
     protected String query, user, pass, _order, _sort;
     protected int _start, _page, _perpage, _limit, sort;
 
@@ -73,8 +72,13 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
         } catch (NullPointerException ex) { idOnly = false; };
 
         try {
-            topLevelOnly = !reqStor.getStoredValue("topLevelOnly").equals("false");
+            this.immediateOnly = reqStor.getStoredValue("immediateOnly").equals("false");
+        } catch (NullPointerException ex) { immediateOnly = true; };
+
+        try {
+            this.topLevelOnly = reqStor.getStoredValue("topLevelOnly").equals("false");
         } catch (NullPointerException ex) { topLevelOnly = true; };
+
 
         try {
             query = reqStor.getStoredValue("query").toString();
@@ -101,6 +105,11 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
             if (!(user.equals("") && pass.equals("")))
                     throw new EntityException("Bad username or password", user, 403);
         }
+
+        try {
+            in_archive = reqStor.getStoredValue("in_archive").toString().equalsIgnoreCase("true");
+        } catch (NullPointerException ex) { in_archive = false; };
+
 
         try {
             _order = reqStor.getStoredValue("_order").toString();
@@ -135,8 +144,6 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
               if (_sort.equalsIgnoreCase("netid"))
                       sort = EPerson.NETID; else
                           sort = EPerson.LASTNAME;
-
-
 
         }
 

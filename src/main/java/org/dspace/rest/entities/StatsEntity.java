@@ -6,18 +6,8 @@
 package org.dspace.rest.entities;
 
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
-import org.sakaiproject.entitybus.entityprovider.annotations.EntityFieldRequired;
-import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
-import org.dspace.app.statistics.Report;
-import org.dspace.app.statistics.Stat;
-import org.dspace.app.statistics.Statistics;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Context;
-import java.util.List;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.util.ArrayList;
-import java.sql.SQLException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,7 +23,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.HashMap;
-import java.util.Hashtable;
 
 /**
  *
@@ -57,6 +46,30 @@ public class StatsEntity {
             System.out.println(ex.getMessage());
         }
    };
+
+   public StatsEntity() {
+        generalStats.put("browse_mini","1");
+        generalStats.put("Community Updates","2");
+        generalStats.put("Workflow Starts","3");
+        generalStats.put("Warnings","4");
+        generalStats.put("Sub Community Added","5");
+        generalStats.put("OAI Requests","6");
+        generalStats.put("browse","7");
+        generalStats.put("Bitstream Views","8");
+        generalStats.put("Bitstream Updates","9");
+        generalStats.put("Searches Performed","10");
+        generalStats.put("Workspace Item Views","11");
+        generalStats.put("Bundles Created","12");
+        generalStats.put("User Logins","13");
+        generalStats.put("Collection Views","14");
+        generalStats.put("Bundle Updates","15");
+        generalStats.put("Bitstreams Added","16");
+        generalStats.put("Item Views","17");
+        generalStats.put("Items Archived","18");
+        generalStats.put("All Items","19");
+        generalStats.put("Community Views","20");
+        generalStats.put("User Home Page Views","21");
+   }
 
 
    public String toString() {
@@ -211,12 +224,9 @@ public class StatsEntity {
         filteredReport = filteredReport.replaceAll("\t","");
         filteredReport = filteredReport.replaceAll("(<td.*?>)(.*?)(</td.*?>)(<td.*?>)(.*?)(</td.*?>)","$2::$5::");
         filteredReport = filteredReport.replaceAll("<.*?>","");
-        System.out.println(filteredReport);
         String[] splittedReport = filteredReport.split("::");
-        System.out.println(" :::::: " + splittedReport[0] + "=" + splittedReport[1]);
         for (int x=0; x<splittedReport.length; x++)
             generalStats.put(splittedReport[x], splittedReport[x+1]);
-
     }
 
 
@@ -311,7 +321,5 @@ public class StatsEntity {
 //    public HashMap<String, String> getStats() {
 //        return this.generalStats;
 //    }
-
-    
-
+   
 }

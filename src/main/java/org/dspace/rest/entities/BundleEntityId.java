@@ -6,7 +6,7 @@
 package org.dspace.rest.entities;
 
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
-import org.dspace.content.Item;
+import org.dspace.content.Bundle;
 import org.dspace.core.Context;
 import java.sql.SQLException;
 
@@ -15,20 +15,20 @@ import java.sql.SQLException;
  *
  * @author Bojan Suzic, bojan.suzic@gmail.com
  */
-public class ItemEntityId {
+public class BundleEntityId {
    @EntityId private int id;
 
-   protected ItemEntityId() {
+   protected BundleEntityId() {
 
    }
 
-   public ItemEntityId (String uid, Context context) throws SQLException {
-       Item res = Item.find(context, Integer.parseInt(uid));
+   public BundleEntityId (String uid, Context context) throws SQLException {
+       Bundle res = Bundle.find(context, Integer.parseInt(uid));
        this.id = res.getID();
    }
 
-    public ItemEntityId(Item item) throws SQLException {
-        this.id = item.getID();
+    public BundleEntityId(Bundle bundle) throws SQLException {
+        this.id = bundle.getID();
    }
 
    public int getId() {
@@ -39,10 +39,10 @@ public class ItemEntityId {
    public boolean equals(Object obj) {
       if (null == obj)
          return false;
-      if (!(obj instanceof ItemEntityId))
+      if (!(obj instanceof BundleEntityId))
          return false;
       else {
-         ItemEntityId castObj = (ItemEntityId) obj;
+         BundleEntityId castObj = (BundleEntityId) obj;
             return (this.id == castObj.id);
       }
    }

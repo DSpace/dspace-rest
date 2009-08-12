@@ -28,25 +28,18 @@ public class BitstreamEntity extends BitstreamEntityId {
    private String handle;
    private int type, storeNumber;
    private long sequenceId, size;
-   List<String> bundles = new ArrayList<String>();
    private String checkSumAlgorithm, description, checkSum,
            formatDescription, source, userFormatDescription;
+   List<Object> bundles = new ArrayList<Object>();
 
    
-
-   // TODO inspect and add additional fields
-
-
    public BitstreamEntity(String uid, Context context) throws SQLException {
        Bitstream res = Bitstream.find(context, Integer.parseInt(uid));
-       Bundle[] bun = res.getBundles();
+       Bundle[] bnd = res.getBundles();
        this.id = res.getID();
        this.handle = res.getHandle();
        this.name = res.getName();
        this.type = res.getType();
-       for (Bundle b : bun)
-           this.bundles.add(b.getName());
-       Bundle b;
        this.checkSum = res.getChecksum();
        this.checkSumAlgorithm = res.getChecksumAlgorithm();
        this.description = res.getDescription();
@@ -56,27 +49,57 @@ public class BitstreamEntity extends BitstreamEntityId {
        this.source = res.getSource();
        this.storeNumber = res.getStoreNumber();
        this.userFormatDescription = res.getUserFormatDescription();
+       for (Bundle b : bnd)
+           this.bundles.add(new BundleEntity(b));
 
    }
 
-   public BitstreamEntity(Bitstream item) throws SQLException {
-        this.handle = item.getHandle();
-        this.name = item.getName();
-        this.type = item.getType();
-        this.id = item.getID();
-        Bundle[] bun = item.getBundles();
-        for (Bundle b : bun)
-            this.bundles.add(b.getName());
-       this.checkSum = item.getChecksum();
-       this.checkSumAlgorithm = item.getChecksumAlgorithm();
-       this.description = item.getDescription();
-       this.formatDescription = item.getFormatDescription();
-       this.sequenceId = item.getSequenceID();
-       this.size = item.getSize();
-       this.source = item.getSource();
-       this.storeNumber = item.getStoreNumber();
-       this.userFormatDescription = item.getUserFormatDescription();
+   public BitstreamEntity(Bitstream bitstream) throws SQLException {
+        // check calling package/class in order to prevent chaining
+        boolean includeFull = false;
+        try {
+            StackTraceElement[] ste = new Throwable().getStackTrace();
+            if ((ste.length > 1) && (ste[1].getClassName().contains("org.dspace.rest.providers")))
+                includeFull = true;
+        } catch (Exception ex) { System.out.println(ex.getMessage()); }
 
+       this.handle = bitstream.getHandle();
+       this.name = bitstream.getName();
+       this.type = bitstream.getType();
+       this.id = bitstream.getID();
+       this.checkSum = bitstream.getChecksum();
+       this.checkSumAlgorithm = bitstream.getChecksumAlgorithm();
+       this.description = bitstream.getDescription();
+       this.formatDescription = bitstream.getFormatDescription();
+       this.sequenceId = bitstream.getSequenceID();
+       this.size = bitstream.getSize();
+       this.source = bitstream.getSource();
+       this.storeNumber = bitstream.getStoreNumber();
+       this.userFormatDescription = bitstream.getUserFormatDescription();
+       Bundle[] bnd = bitstream.getBundles();
+       for (Bundle b : bnd)
+           this.bundles.add(includeFull ? new BundleEntity(b) : new BundleEntityId(b));
+   }
+
+   public BitstreamEntity() {
+       this.handle = null;
+       this.name = "The name of the file";
+       this.type = 0;
+       this.id = 4;
+       this.checkSum = "b74c368660979349459fe30c93e2d9c7";
+       this.checkSumAlgorithm = "MD5";
+       this.description = "Sample description";
+       this.formatDescription = "Adobe PDF";
+       this.sequenceId = 1;
+       this.size = 123456789;
+       this.source = "/dspace/upload/file.pdf";
+       this.storeNumber = 0;
+       this.userFormatDescription = null;
+       this.bundles.add(new BundleEntity());
+   }
+
+   public List<?> getBundles() {
+       return this.bundles;
    }
 
    public String getCheckSum() {
@@ -130,14 +153,9 @@ public class BitstreamEntity extends BitstreamEntityId {
    public int getType() {
       return this.type;
    }
-
-   public List getBundles() {
-       return this.bundles;
-   }
-
+  
    @Override
    public String toString() {
        return "id:" + this.id + ", stuff.....";
    }
-
 }
