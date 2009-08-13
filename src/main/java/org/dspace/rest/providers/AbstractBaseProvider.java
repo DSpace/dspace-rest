@@ -11,6 +11,8 @@ import org.sakaiproject.entitybus.entityprovider.capabilities.*;
 import org.sakaiproject.entitybus.entityprovider.extension.RequestStorage;
 import org.sakaiproject.entitybus.entityprovider.extension.Formats;
 import org.dspace.core.Context;
+import org.dspace.content.Collection;
+import org.dspace.content.Community;
 import org.dspace.eperson.EPerson;
 import org.dspace.authorize.AuthorizeException;
 import org.sakaiproject.entitybus.exception.EntityException;
@@ -35,6 +37,8 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
     protected boolean idOnly, topLevelOnly, in_archive, immediateOnly;
     protected String query, user, pass, _order, _sort;
     protected int _start, _page, _perpage, _limit, sort;
+    protected Collection _collection = null;
+    protected Community _community = null;
 
     public AbstractBaseProvider(EntityProviderManager entityProviderManager) throws SQLException {
         this.entityProviderManager = entityProviderManager;
@@ -68,6 +72,28 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
         } catch (SQLException ex) { throw new EntityException("Internal server error", "SQL error", 500); }
 
         try {
+            user = reqStor.getStoredValue("user").toString();
+        } catch (NullPointerException ex) { user = ""; };
+
+        try {
+            pass = reqStor.getStoredValue("pass").toString();
+        } catch (NullPointerException ex) { pass = ""; };
+
+        try {
+            EPerson eUser = EPerson.findByEmail(context, user);
+            if ((eUser.canLogIn()) && (eUser.checkPassword(pass)))
+                context.setCurrentUser(eUser);
+            else
+                throw new EntityException("Bad username or password", user, 403);
+        }
+        catch (SQLException sql) { System.out.println (sql.toString()); }
+        catch (AuthorizeException auth) { throw new EntityException("Unauthorised", user, 401); }
+        catch (NullPointerException ne) {
+            if (!(user.equals("") && pass.equals("")))
+                    throw new EntityException("Bad username or password", user, 403);
+        }
+
+        try {
             this.idOnly = reqStor.getStoredValue("idOnly").equals("true");
         } catch (NullPointerException ex) { idOnly = false; };
 
@@ -84,27 +110,7 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
             query = reqStor.getStoredValue("query").toString();
         } catch (NullPointerException ex) { query = ""; };
 
-        try {
-            user = reqStor.getStoredValue("user").toString();
-        } catch (NullPointerException ex) { user = ""; };
 
-        try {
-            pass = reqStor.getStoredValue("pass").toString();
-        } catch (NullPointerException ex) { pass = ""; };
-
-        try {
-            EPerson eUser = EPerson.findByEmail(context, user);
-            if ((eUser.canLogIn()) && (eUser.checkPassword(pass))) 
-                context.setCurrentUser(eUser);
-            else
-                throw new EntityException("Bad username or password", user, 403);
-        } 
-        catch (SQLException sql) { System.out.println (sql.toString()); }
-        catch (AuthorizeException auth) { throw new EntityException("Unauthorised", user, 401); }
-        catch (NullPointerException ne) { 
-            if (!(user.equals("") && pass.equals("")))
-                    throw new EntityException("Bad username or password", user, 403);
-        }
 
         try {
             in_archive = reqStor.getStoredValue("in_archive").toString().equalsIgnoreCase("true");
@@ -146,6 +152,39 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
                           sort = EPerson.LASTNAME;
 
         }
+
+        int intcommunity = 0;
+        int intcollection = 0;
+        try {
+            intcommunity = Integer.parseInt(reqStor.getStoredValue("community").toString());
+        } catch (NullPointerException nul) { }
+        
+        try {
+            _community = Community.find(context, intcommunity);
+            
+        } catch (NullPointerException nul) {
+            throw new EntityException("No content", "There is no such community", 204);
+        } catch (SQLException sql) {
+            throw new EntityException("Internal Server error", "SQL problem", 500);
+        }
+
+        try {
+            intcollection =Integer.parseInt(reqStor.getStoredValue("collection").toString());
+        } catch (NullPointerException nul) { };
+
+        try {
+            _collection = Collection.find(context, intcollection);
+
+        } catch (NullPointerException nul) {
+            throw new EntityException("No content", "There is no such collection", 204);
+        } catch (SQLException sql) {
+            throw new EntityException("Internal Server error", "SQL problem", 500);
+        }
+
+
+        if ((_community != null) && (_collection != null))
+            throw new EntityException("Bad request", "Community and collection selected", 400);
+
 
     }
 

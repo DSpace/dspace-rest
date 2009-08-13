@@ -76,15 +76,23 @@ public class CommunityEntity extends CommunityEntityId {
    }
 
    public CommunityEntity() {
+        // check calling package/class in order to prevent chaining
+        boolean includeFull = false;
+        try {
+            StackTraceElement[] ste = new Throwable().getStackTrace();
+            if ((ste.length > 1) && (ste[1].getClassName().contains("org.dspace.rest.providers")))
+                includeFull = true;
+        } catch (Exception ex) { System.out.println(ex.getMessage()); }
+
         this.canEdit = true;
         this.handle = "123456789/0";
         this.name = "Community Name";
         this.type = 5;
         this.id = 6;
         this.countItems = 1001;
-        this.collections.add(new CollectionEntity());
-        this.subCommunities.add(new CommunityEntity());
-        this.parent = new CommunityEntity();
+        this.collections.add(includeFull ? new CollectionEntity() : new CollectionEntityId());
+        this.subCommunities.add(includeFull ? new CommunityEntity() : new CommunityEntityId());
+        this.parent = includeFull ? new CommunityEntity() : new CommunityEntityId();
    }
 
 

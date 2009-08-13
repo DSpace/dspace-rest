@@ -78,6 +78,14 @@ public class CollectionEntity {
    }
 
    public CollectionEntity() {
+        // check calling package/class in order to prevent chaining
+        boolean includeFull = false;
+        try {
+            StackTraceElement[] ste = new Throwable().getStackTrace();
+            if ((ste.length > 1) && (ste[1].getClassName().contains("org.dspace.rest.providers")))
+                includeFull = true;
+        } catch (Exception ex) { System.out.println(ex.getMessage()); }
+
         this.canEdit = false;
         this.handle = "123456789/0";
         this.name = "Sample collection";
@@ -86,7 +94,7 @@ public class CollectionEntity {
         this.countItems = 10921;
         this.licence = "Example licence";
         this.items.add(new ItemEntity());
-        this.communities.add(new CommunityEntity());
+        this.communities.add(includeFull ? new CommunityEntity() : new CommunityEntityId());
    }
 
    public String getLicence() {

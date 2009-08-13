@@ -51,66 +51,104 @@ public class CommunityHelper {
     public static List<Object> getObjects(String uid, Context context, int method, boolean idOnly, boolean immediateOnly) throws SQLException, RecentSubmissionsException {
         List<Object> entities = new ArrayList<Object>();
 
-        Community res = Community.find(context, Integer.parseInt(uid));
-
         // Reflect method resolution could be used here but this causes perfomance penalty
 
         switch(method) {
 
             case PARENTS :
             {
-                if (immediateOnly)
-                    for (Community o : res.getAllParents())
-                        entities.add(idOnly ? new CommunityEntityId(o) : new CommunityEntity(o));
-                    else
-                        entities.add(idOnly ? new CommunityEntityId(res.getParentCommunity()) : new CommunityEntity(res.getParentCommunity()));
+                if (uid.equals(":ID:"))
+                    entities.add(new CommunityEntity());
+                else {
+                    Community res = Community.find(context, Integer.parseInt(uid));
+                    if (immediateOnly)
+                        for (Community o : res.getAllParents())
+                            entities.add(idOnly ? new CommunityEntityId(o) : new CommunityEntity(o));
+                        else
+                            entities.add(idOnly ? new CommunityEntityId(res.getParentCommunity()) : new CommunityEntity(res.getParentCommunity()));
+                }
             } break;
             case CHILDREN :
             {
-                for (Community o : res.getSubcommunities())
-                    entities.add(idOnly ? new CommunityEntityId(o) : new CommunityEntity(o));
+                if (uid.equals(":ID:"))
+                    entities.add(new CommunityEntity());
+                else {
+                    Community res = Community.find(context, Integer.parseInt(uid));
+                    for (Community o : res.getSubcommunities())
+                        entities.add(idOnly ? new CommunityEntityId(o) : new CommunityEntity(o));
+                }
             } break;
             case COLLECTIONS :
             {
-                for (Collection o: res.getCollections())
-                    entities.add(idOnly ? new CollectionEntityId(o) : new CollectionEntity(o));
+                if (uid.equals(":ID:"))
+                    entities.add(new CollectionEntity());
+                else {
+                    Community res = Community.find(context, Integer.parseInt(uid));
+                    for (Collection o: res.getCollections())
+                        entities.add(idOnly ? new CollectionEntityId(o) : new CollectionEntity(o));
+                }
             } break;
             case RECENT_SUBMISSIONS :
             {
-    			RecentSubmissionsManager rsm = new RecentSubmissionsManager(context);
-        		RecentSubmissions recent = rsm.getRecentSubmissions(res);
-                for (Item i: recent.getRecentSubmissions())
-                    entities.add(idOnly ? new ItemEntityId(i) : new ItemEntity(i));                
+                if (uid.equals(":ID:"))
+                    entities.add(new ItemEntity());
+                else {
+                    Community res = Community.find(context, Integer.parseInt(uid));
+        			RecentSubmissionsManager rsm = new RecentSubmissionsManager(context);
+            		RecentSubmissions recent = rsm.getRecentSubmissions(res);
+                    for (Item i: recent.getRecentSubmissions())
+                        entities.add(idOnly ? new ItemEntityId(i) : new ItemEntity(i));
+                }
             } break;
             case COMMUNITIES_INVOLVED :
             {
-                Collection col = Collection.find(context, Integer.parseInt(uid));
-                for (Community o : col.getCommunities())
-                    entities.add(idOnly ? new CommunityEntityId(o) : new CommunityEntity(o));                                
+                if (uid.equals(":ID:"))
+                    entities.add(new CommunityEntity());
+                else {
+                    Collection col = Collection.find(context, Integer.parseInt(uid));
+                    for (Community o : col.getCommunities())
+                        entities.add(idOnly ? new CommunityEntityId(o) : new CommunityEntity(o));
+                }
             } break;
             case ITEMS_INVOLVED :
             {
-                Collection col = Collection.find(context, Integer.parseInt(uid));
-                ItemIterator i = immediateOnly ? col.getItems() : col.getAllItems();
-                while (i.hasNext())
-                    entities.add(idOnly ? new ItemEntityId(i.next()) : new ItemEntity(i.next()));
+                if (uid.equals(":ID:"))
+                    entities.add(new ItemEntity());
+                else {
+                    Collection col = Collection.find(context, Integer.parseInt(uid));
+                    ItemIterator i = immediateOnly ? col.getItems() : col.getAllItems();
+                    while (i.hasNext())
+                        entities.add(idOnly ? new ItemEntityId(i.next()) : new ItemEntity(i.next()));
+                }
             } break;
             case ITEM_PERMISSION :
             {
-                Item i = Item.find(context, Integer.parseInt(uid));
-                entities.add(i.canEdit());
+                if (uid.equals(":ID:"))
+                    entities.add(true);
+                else {
+                    Item i = Item.find(context, Integer.parseInt(uid));
+                    entities.add(i.canEdit());
+                }
             } break;
             case ITEM_IN_COMMUNITIES :
             {
-                Item i = Item.find(context, Integer.parseInt(uid));
-                for (Community o : i.getCommunities())
-                    entities.add(idOnly ? new CommunityEntityId(o) : new CommunityEntity(o));
+                if (uid.equals(":ID:"))
+                    entities.add(new CommunityEntity());
+                else {
+                    Item i = Item.find(context, Integer.parseInt(uid));
+                    for (Community o : i.getCommunities())
+                        entities.add(idOnly ? new CommunityEntityId(o) : new CommunityEntity(o));
+                }
             } break;
             case ITEM_IN_COLLECTIONS :
             {
-                Item i = Item.find(context, Integer.parseInt(uid));
-                for (Collection o : i.getCollections())
-                    entities.add(idOnly ? new CollectionEntityId(o) : new CollectionEntity(o));
+                if (uid.equals(":ID:"))
+                    entities.add(new CollectionEntity());
+                else {
+                    Item i = Item.find(context, Integer.parseInt(uid));
+                    for (Collection o : i.getCollections())
+                        entities.add(idOnly ? new CollectionEntityId(o) : new CollectionEntity(o));
+                }
             }
 
 

@@ -107,7 +107,7 @@ public class CommunitiesProvider extends AbstractBaseProvider implements  CoreEn
             return new CommunityEntity();
 
         if (reference.getId() == null) {
-            return new StandardEntity();
+            return new CommunityEntity();
         }
         if (entityExists(reference.getId())) {
             try {

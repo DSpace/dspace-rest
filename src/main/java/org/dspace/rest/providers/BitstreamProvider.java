@@ -19,6 +19,13 @@ import java.sql.SQLException;
 import org.dspace.rest.entities.*;
 import org.dspace.app.webui.components.RecentSubmissionsException;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 /**
  *
  * @author Bojan Suzic, bojan.suzic@gmail.com
@@ -37,6 +44,8 @@ public class BitstreamProvider extends AbstractBaseProvider implements  CoreEnti
     @EntityCustomAction(action="receive", viewKey=EntityView.VIEW_SHOW)
     public Object receive(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
         // TODO implement sending full bitstream
+        Bitstream bst = Bitstream.find(context, Integer.parseInt(reference.getId()));
+
         throw new IllegalArgumentException("Invalid id:" + reference.getId());
     }
 
@@ -64,7 +73,7 @@ public class BitstreamProvider extends AbstractBaseProvider implements  CoreEnti
             return new CommunityEntity();
 
         if (reference.getId() == null) {
-            return new StandardEntity();
+            return new BitstreamEntity();
         }
         if (entityExists(reference.getId())) {
             try {

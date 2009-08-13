@@ -82,6 +82,14 @@ public class BitstreamEntity extends BitstreamEntityId {
    }
 
    public BitstreamEntity() {
+        // check calling package/class in order to prevent chaining
+        boolean includeFull = false;
+        try {
+            StackTraceElement[] ste = new Throwable().getStackTrace();
+            if ((ste.length > 1) && (ste[1].getClassName().contains("org.dspace.rest.providers")))
+                includeFull = true;
+        } catch (Exception ex) { System.out.println(ex.getMessage()); }
+
        this.handle = null;
        this.name = "The name of the file";
        this.type = 0;
@@ -95,7 +103,7 @@ public class BitstreamEntity extends BitstreamEntityId {
        this.source = "/dspace/upload/file.pdf";
        this.storeNumber = 0;
        this.userFormatDescription = null;
-       this.bundles.add(new BundleEntity());
+       this.bundles.add(includeFull ? new BundleEntity() : new BundleEntityId());
    }
 
    public List<?> getBundles() {
@@ -146,6 +154,7 @@ public class BitstreamEntity extends BitstreamEntityId {
        return this.handle;
    }
 
+   @Override
    public int getId() {
        return this.id;
    }
