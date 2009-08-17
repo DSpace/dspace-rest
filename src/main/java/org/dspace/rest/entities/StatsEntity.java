@@ -72,8 +72,9 @@ public class StatsEntity {
    }
 
 
+   @Override
    public String toString() {
-       return "id:" + this.id + ", stuff.....";
+       return "id:" + this.id;
    }
 
 
@@ -227,6 +228,7 @@ public class StatsEntity {
         String[] splittedReport = filteredReport.split("::");
         for (int x=0; x<splittedReport.length; x++)
             generalStats.put(splittedReport[x], splittedReport[x+1]);
+        context.complete();
     }
 
 

@@ -74,6 +74,7 @@ public class ItemEntity {
            this.collections.add(new CollectionEntity(c));
        for (Community c : com)
            this.communities.add(new CommunityEntity(c));
+       context.complete();
    }
 
    public ItemEntity(Item item) throws SQLException {

@@ -10,6 +10,8 @@ import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import javax.servlet.ServletException;
 
 import org.sakaiproject.entitybus.EntityBrokerManager;
 import org.sakaiproject.entitybus.entityprovider.EntityProviderManager;
@@ -17,16 +19,16 @@ import org.sakaiproject.entitybus.impl.EntityBrokerCoreServiceManager;
 import org.sakaiproject.entitybus.providers.EntityRequestHandler;
 import org.sakaiproject.entitybus.rest.EntityBrokerRESTServiceManager;
 import org.sakaiproject.entitybus.util.servlet.DirectServlet;
-import org.dspace.rest.providers.AbstractRESTProvider;
 import org.dspace.rest.providers.CommunitiesProvider;
-import org.dspace.rest.providers.StandardEntityProvider;
-import org.dspace.rest.providers.TestEntityProvider;
 import org.dspace.rest.providers.CollectionsProvider;
 import org.dspace.rest.providers.BitstreamProvider;
 import org.dspace.rest.providers.ItemsProvider;
 import org.dspace.rest.providers.StatsProvider;
 import org.dspace.rest.providers.UserEntityProvider;
 import org.dspace.rest.providers.AbstractBaseProvider;
+import org.dspace.rest.providers.SearchProvider;
+import org.dspace.rest.providers.HarvestProvider;
+import org.sakaiproject.entitybus.entityprovider.extension.Formats;
 import org.dspace.content.*;
 import org.dspace.core.*;
 
@@ -49,7 +51,7 @@ public class DS16DirectServlet extends DirectServlet {
     protected void startProviders(EntityProviderManager entityProviderManager) throws java.sql.SQLException {
         String config = getServletContext().getInitParameter("dspace-config");
 
-        // for dev testing only
+        // for dev testing only COMMENT IN WORKING ENVIRONMENT
         if (config.contains("dspace.dir")) {
             config = "/dspace/config/dspace.cfg";
         }
@@ -62,6 +64,8 @@ public class DS16DirectServlet extends DirectServlet {
         this.entityProviders.add( new ItemsProvider(entityProviderManager) );
         this.entityProviders.add( new StatsProvider(entityProviderManager) );
         this.entityProviders.add( new UserEntityProvider(entityProviderManager) );
+        this.entityProviders.add( new SearchProvider(entityProviderManager) );
+        this.entityProviders.add( new HarvestProvider(entityProviderManager) );
     }
 
     @Override
@@ -117,6 +121,7 @@ public class DS16DirectServlet extends DirectServlet {
         }
     }
 
+
     @Override
     public String getCurrentLoggedInUserId() {
         return "tester";
@@ -124,7 +129,6 @@ public class DS16DirectServlet extends DirectServlet {
 
     @Override
     public void handleUserLogin(HttpServletRequest req, HttpServletResponse res, String path) {
-        // attempt basic auth first?
-        throw new SecurityException("Not able to handle login redirects yet");
+        // login is implemented in AbstractBaseProvider, per request
     }
 }

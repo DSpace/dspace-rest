@@ -43,6 +43,7 @@ public class BundleEntity extends BundleEntityId {
        Item[] itm = res.getItems();
        for (Item i : itm)
            this.items.add(new ItemEntity(i));
+       context.complete();
    }
 
    public BundleEntity(Bundle bundle) throws SQLException {

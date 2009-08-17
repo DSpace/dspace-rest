@@ -25,6 +25,7 @@ public class BundleEntityId {
    public BundleEntityId (String uid, Context context) throws SQLException {
        Bundle res = Bundle.find(context, Integer.parseInt(uid));
        this.id = res.getID();
+       context.complete();
    }
 
     public BundleEntityId(Bundle bundle) throws SQLException {

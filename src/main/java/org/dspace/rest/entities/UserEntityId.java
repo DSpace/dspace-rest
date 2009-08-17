@@ -27,7 +27,8 @@ public class UserEntityId {
    public UserEntityId (String uid, Context context) throws SQLException {
        res = EPerson.find(context, Integer.parseInt(uid));
        this.id = res.getID();
-   }
+       context.complete();
+}
 
    public UserEntityId(EPerson eperson) throws SQLException {
         this.id = eperson.getID();

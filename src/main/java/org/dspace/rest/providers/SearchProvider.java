@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package org.dspace.rest.providers;
 
 import java.util.ArrayList;
@@ -11,18 +10,22 @@ import org.sakaiproject.entitybus.EntityReference;
 import org.sakaiproject.entitybus.entityprovider.CoreEntityProvider;
 import org.sakaiproject.entitybus.entityprovider.EntityProviderManager;
 import org.sakaiproject.entitybus.entityprovider.search.Search;
+import org.dspace.core.Context;
 import java.sql.SQLException;
+import org.sakaiproject.entitybus.exception.EntityException;
 import org.dspace.rest.entities.*;
 import org.dspace.search.*;
+import org.apache.log4j.Logger;
 import org.dspace.sort.SortOption;
 import org.dspace.core.Constants;
-import java.util.HashMap;
+import java.io.IOException;
 
 /**
  *
  */
 public class SearchProvider extends AbstractBaseProvider implements CoreEntityProvider {
-
+    private static Logger log = Logger.getLogger(UserEntityProvider.class);
+    
     public SearchProvider(EntityProviderManager entityProviderManager) throws SQLException {
         super(entityProviderManager);
         entityProviderManager.registerEntityProvider(this);
@@ -32,101 +35,116 @@ public class SearchProvider extends AbstractBaseProvider implements CoreEntityPr
         return "search";
     }
 
-
-    public boolean entityExists(String id)  {
-        return false;
+    public boolean entityExists(String id) {
+        return true;
     }
 
-
     public Object getEntity(EntityReference reference) {
-        throw new IllegalArgumentException("Not supported");
+        log.info(userInfo()+"get_entity:" + reference.getId());
+            throw new EntityException("Not Acceptable", "The data is not available", 406);
     }
 
     public List<?> getEntities(EntityReference ref, Search search) {
-          refreshParams();
-          List<Object> entities = new ArrayList<Object>();
+        log.info(userInfo()+"get_entities");
 
-          try {
-              QueryArgs arg = new QueryArgs();
-              arg.setQuery(query);
+        Context context;
+        try {
+            context = new Context();
+        } catch (SQLException ex) {
+            throw new EntityException("Internal server error", "SQL error", 500);
+        }
 
-              if (_perpage > 0)
-                  arg.setPageSize(_perpage);
-              arg.setStart(_start);
+        refreshParams(context);
+        List<Object> entities = new ArrayList<Object>();
 
-              if ((_order.equalsIgnoreCase("descending"))||(_order.equalsIgnoreCase("desc")))
-                  arg.setSortOrder(SortOption.DESCENDING);
-              else
-                  arg.setSortOrder(SortOption.ASCENDING);
+        try {
+            QueryArgs arg = new QueryArgs();
+            arg.setQuery(query);
 
-              
-              
-              QueryResults qre;
-              
-              if (_community != null)
-                  qre = DSQuery.doQuery(context, arg, _community);
-              else
-                  if (_collection != null)
-                      qre = DSQuery.doQuery(context, arg, _collection);
-                  else
-                      qre = DSQuery.doQuery(context, arg);
-              entities.add(new SearchResultsInfoEntity(qre.getHitCount()-1, qre.getHitTypes(), qre.getHitHandles(), qre.getHitIds()));
-              
-              for (int x=0; x<qre.getHitTypes().size(); x++) {
-                  switch ((Integer)(qre.getHitTypes().get(x))) {
-                          case Constants.ITEM: {
-                              entities.add(idOnly ?
-                                  new ItemEntityId(qre.getHitIds().get(x).toString(), context) :
-                                  new ItemEntity(qre.getHitIds().get(x).toString(), context) );
-                          }; break;
+            if (_perpage > 0) {
+                arg.setPageSize(_perpage);
+            }
+            arg.setStart(_start);
 
-                          case Constants.COMMUNITY: {
-                              entities.add(idOnly ?
-                                  new CommunityEntityId(qre.getHitIds().get(x).toString(), context) :
-                                  new CommunityEntity(qre.getHitIds().get(x).toString(), context) );
-                          }; break;
+            if ((_order.equalsIgnoreCase("descending")) || (_order.equalsIgnoreCase("desc"))) {
+                arg.setSortOrder(SortOption.DESCENDING);
+            } else {
+                arg.setSortOrder(SortOption.ASCENDING);
+            }
 
-                          case Constants.COLLECTION: {
-                              entities.add(idOnly ?
-                                  new CollectionEntityId(qre.getHitIds().get(x).toString(), context) :
-                                  new CollectionEntity(qre.getHitIds().get(x).toString(), context) );
-                          }; break;
+            QueryResults qre;
 
-                          case Constants.BITSTREAM: {
-                              entities.add(idOnly ?
-                                  new BitstreamEntityId(qre.getHitIds().get(x).toString(), context) :
-                                  new BitstreamEntity(qre.getHitIds().get(x).toString(), context) );
-                          }; break;
+            if (_community != null) {
+                qre = DSQuery.doQuery(context, arg, _community);
+            } else if (_collection != null) {
+                qre = DSQuery.doQuery(context, arg, _collection);
+            } else {
+                qre = DSQuery.doQuery(context, arg);
+            }
+            entities.add(new SearchResultsInfoEntity(qre.getHitCount() - 1, qre.getHitTypes(), qre.getHitHandles(), qre.getHitIds()));
 
-                          case Constants.BUNDLE: {
-                              entities.add(idOnly ?
-                                  new BundleEntityId(qre.getHitIds().get(x).toString(), context) :
-                                  new BundleEntity(qre.getHitIds().get(x).toString(), context) );
-                          }; break;
+            for (int x = 0; x < qre.getHitTypes().size(); x++) {
+                switch ((Integer) (qre.getHitTypes().get(x))) {
+                    case Constants.ITEM:
+                         {
+                            entities.add(idOnly ? new ItemEntityId(qre.getHitIds().get(x).toString(), context) : new ItemEntity(qre.getHitIds().get(x).toString(), context));
+                        }
+                        ;
+                        break;
 
-                          case Constants.EPERSON: {
-                              entities.add(idOnly ?
-                                  new UserEntityId(qre.getHitIds().get(x).toString(), context) :
-                                  new UserEntity(qre.getHitIds().get(x).toString(), context) );
-                          }; break;
+                    case Constants.COMMUNITY:
+                         {
+                            entities.add(idOnly ? new CommunityEntityId(qre.getHitIds().get(x).toString(), context) : new CommunityEntity(qre.getHitIds().get(x).toString(), context));
+                        }
+                        ;
+                        break;
 
-                      }
-                  }
-                          
-          }
-          catch (Exception ex) {  };
+                    case Constants.COLLECTION:
+                         {
+                            entities.add(idOnly ? new CollectionEntityId(qre.getHitIds().get(x).toString(), context) : new CollectionEntity(qre.getHitIds().get(x).toString(), context));
+                        }
+                        ;
+                        break;
+
+                    case Constants.BITSTREAM:
+                         {
+                            entities.add(idOnly ? new BitstreamEntityId(qre.getHitIds().get(x).toString(), context) : new BitstreamEntity(qre.getHitIds().get(x).toString(), context));
+                        }
+                        ;
+                        break;
+
+                    case Constants.BUNDLE:
+                         {
+                            entities.add(idOnly ? new BundleEntityId(qre.getHitIds().get(x).toString(), context) : new BundleEntity(qre.getHitIds().get(x).toString(), context));
+                        }
+                        ;
+                        break;
+
+                    case Constants.EPERSON:
+                         {
+                            entities.add(idOnly ? new UserEntityId(qre.getHitIds().get(x).toString(), context) : new UserEntity(qre.getHitIds().get(x).toString(), context));
+                        }
+                        ;
+                        break;
+
+                }
+            }
+
+        } catch (SQLException sql) {
+            throw new EntityException("Internal Server Error", "SQL Problem", 500);
+        } catch (IOException io) {
+            throw new EntityException("Internal Server Error", "Could not execute query",500);
+        }
+
+//        removeConn(context);
 
         return entities;
     }
 
-
     /**
      * Returns a Entity object with sample data
      */
-
     public Object getSampleEntity() {
         return null;
     }
-
-
 }

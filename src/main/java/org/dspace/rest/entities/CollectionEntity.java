@@ -5,7 +5,6 @@
 
 package org.dspace.rest.entities;
 
-import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityFieldRequired;
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
 import org.dspace.content.Collection;
@@ -49,8 +48,8 @@ public class CollectionEntity {
 
        for (Community c : res.getCommunities())
            communities.add(new CommunityEntityId(c));
-
-   }
+       context.complete();
+    }
 
    public CollectionEntity(Collection collection) throws SQLException {
         // check calling package/class in order to prevent chaining

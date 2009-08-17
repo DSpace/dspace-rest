@@ -25,6 +25,7 @@ public class BitstreamEntityId {
    public BitstreamEntityId (String uid, Context context) throws SQLException {
        Bitstream res = Bitstream.find(context, Integer.parseInt(uid));
        this.id = res.getID();
+       context.complete();
    }
 
     public BitstreamEntityId(Bitstream bitstream) throws SQLException {

@@ -23,9 +23,9 @@ import org.dspace.app.webui.components.RecentSubmissionsException;
  *
  * @author Bojan Suzic, bojan.suzic@gmail.com
  */
-public class CommunityHelper {
+public class UtilHelper {
 
-    protected CommunityHelper() {
+    protected UtilHelper() {
         
     }
 

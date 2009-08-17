@@ -25,7 +25,8 @@ public class CommunityEntityId {
    public CommunityEntityId (String uid, Context context) throws SQLException {
        Community res = Community.find(context, Integer.parseInt(uid));
        this.id = res.getID();
-   }
+       context.complete();
+}
 
     public CommunityEntityId(Community community) throws SQLException {
         this.id = community.getID();

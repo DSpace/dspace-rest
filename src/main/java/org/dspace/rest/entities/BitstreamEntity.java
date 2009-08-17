@@ -5,10 +5,8 @@
 
 package org.dspace.rest.entities;
 
-import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityFieldRequired;
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
-import org.dspace.content.Item;
 import org.dspace.content.Bundle;
 import org.dspace.content.Bitstream;
 import org.dspace.core.Context;
@@ -29,7 +27,7 @@ public class BitstreamEntity extends BitstreamEntityId {
    private int type, storeNumber;
    private long sequenceId, size;
    private String checkSumAlgorithm, description, checkSum,
-           formatDescription, source, userFormatDescription;
+           formatDescription, source, userFormatDescription, mimeType;
    List<Object> bundles = new ArrayList<Object>();
 
    
@@ -51,7 +49,8 @@ public class BitstreamEntity extends BitstreamEntityId {
        this.userFormatDescription = res.getUserFormatDescription();
        for (Bundle b : bnd)
            this.bundles.add(new BundleEntity(b));
-
+       this.mimeType = res.getFormat().getMIMEType();
+       context.complete();
    }
 
    public BitstreamEntity(Bitstream bitstream) throws SQLException {
@@ -79,6 +78,7 @@ public class BitstreamEntity extends BitstreamEntityId {
        Bundle[] bnd = bitstream.getBundles();
        for (Bundle b : bnd)
            this.bundles.add(includeFull ? new BundleEntity(b) : new BundleEntityId(b));
+       this.mimeType = bitstream.getFormat().getMIMEType();
    }
 
    public BitstreamEntity() {
@@ -104,8 +104,12 @@ public class BitstreamEntity extends BitstreamEntityId {
        this.storeNumber = 0;
        this.userFormatDescription = null;
        this.bundles.add(includeFull ? new BundleEntity() : new BundleEntityId());
+       this.mimeType = "application/pdf";
    }
 
+   public String getMimeType() {
+       return this.mimeType;
+   }
    public List<?> getBundles() {
        return this.bundles;
    }

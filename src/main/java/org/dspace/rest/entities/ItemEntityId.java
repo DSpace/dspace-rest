@@ -25,7 +25,8 @@ public class ItemEntityId {
    public ItemEntityId (String uid, Context context) throws SQLException {
        Item res = Item.find(context, Integer.parseInt(uid));
        this.id = res.getID();
-   }
+       context.complete();
+}
 
     public ItemEntityId(Item item) throws SQLException {
         this.id = item.getID();

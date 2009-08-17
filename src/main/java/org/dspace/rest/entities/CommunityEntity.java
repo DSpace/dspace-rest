@@ -47,6 +47,7 @@ public class CommunityEntity extends CommunityEntityId {
         try {
             this.parent = new CommunityEntity(res.getParentCommunity());
         } catch (NullPointerException ex) { this.parent = null; };
+       context.complete();
    }
 
    public CommunityEntity(Community community) throws SQLException {

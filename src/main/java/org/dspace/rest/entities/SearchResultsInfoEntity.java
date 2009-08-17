@@ -5,16 +5,9 @@
 
 package org.dspace.rest.entities;
 
-import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
-import org.sakaiproject.entitybus.entityprovider.annotations.EntityFieldRequired;
-import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
-import org.dspace.content.Item;
-import org.dspace.content.Bundle;
-import org.dspace.content.Bitstream;
-import org.dspace.core.Context;
+
 import java.util.List;
 import java.util.ArrayList;
-import java.sql.SQLException;
 
 /**
  *
@@ -48,5 +41,4 @@ public class SearchResultsInfoEntity {
     public List<?> getResultIDs() {
         return this.resultsIDs;
     }
-
 }

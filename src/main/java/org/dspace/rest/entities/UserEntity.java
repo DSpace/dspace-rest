@@ -6,7 +6,6 @@
 package org.dspace.rest.entities;
 
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityFieldRequired;
-import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
 import org.dspace.eperson.EPerson;
 import org.dspace.core.Context;
 import java.sql.SQLException;
@@ -36,7 +35,8 @@ public class UserEntity extends UserEntityId {
        this.language = res.getLanguage();
        this.lastName = res.getLastName();
        this.netId = res.getNetid();
-   }    
+//       context.complete();
+}    
 
    public UserEntity(EPerson eperson) throws SQLException {
         super(eperson);
