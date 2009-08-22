@@ -1,5 +1,5 @@
 /*
- * CollectionsProvider.java
+ * UserProvider.java
  *
  * Version: $Revision$
  *
@@ -37,108 +37,40 @@
  */
 package org.dspace.rest.providers;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 import org.sakaiproject.entitybus.EntityReference;
-import org.sakaiproject.entitybus.EntityView;
 import org.sakaiproject.entitybus.entityprovider.CoreEntityProvider;
 import org.sakaiproject.entitybus.entityprovider.EntityProviderManager;
 import org.sakaiproject.entitybus.entityprovider.search.Search;
-import org.sakaiproject.entitybus.entityprovider.annotations.EntityCustomAction;
-import org.dspace.content.Bitstream;
 import org.dspace.core.Context;
-import org.apache.log4j.Logger;
+import org.sakaiproject.entitybus.exception.EntityException;
+import org.dspace.eperson.EPerson;
 import java.sql.SQLException;
 import org.dspace.rest.entities.*;
-import org.dspace.app.webui.components.RecentSubmissionsException;
-import javax.servlet.http.HttpServletResponse;
-import org.dspace.authorize.AuthorizeException;
-import javax.servlet.ServletOutputStream;
-import java.io.BufferedInputStream;
-import org.sakaiproject.entitybus.exception.EntityException;
-import java.io.IOException;
+import org.apache.log4j.Logger;
+import java.util.Collections;
+import org.dspace.rest.util.GenComparator;
 
 /**
- * Provides access to bitstream entities
+ * Provides interface for access to user info entities
+ * @see UserEntity
+ * @see UserEntityId
  * @author Bojan Suzic, bojan.suzic@gmail.com
  */
-public class BitstreamProvider extends AbstractBaseProvider implements CoreEntityProvider {
+public class UserProvider extends AbstractBaseProvider implements CoreEntityProvider {
 
-    EntityProviderManager locEPM;
     private static Logger log = Logger.getLogger(UserProvider.class);
 
-    public BitstreamProvider(EntityProviderManager entityProviderManager) throws SQLException {
+    public UserProvider(EntityProviderManager entityProviderManager) throws SQLException {
         super(entityProviderManager);
         entityProviderManager.registerEntityProvider(this);
-        locEPM = entityProviderManager;
     }
 
     public String getEntityPrefix() {
-        return "bitstream";
+        return "users";
     }
 
-    /**
-     * This part sends binary object to user, usually document file
-     * @param reference
-     * @param view
-     * @param params
-     * @return
-     * @throws java.sql.SQLException
-     * @throws org.dspace.app.webui.components.RecentSubmissionsException
-     */
-    @EntityCustomAction(action = "receive", viewKey = EntityView.VIEW_SHOW)
-    public Object receive(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
-        log.info(userInfo() + "receive_action:" + reference.getId());
-        Context context;
-        try {
-            context = new Context();
-        } catch (SQLException ex) {
-            throw new EntityException("Internal server error", "SQL error", 500);
-        }
-
-        // refresh query parameters and transfer to local variables
-        refreshParams(context);
-
-        Bitstream bst = Bitstream.find(context, Integer.parseInt(reference.getId()));
-
-        /**
-         * Define stream, headers, file.. and send
-         */
-        HttpServletResponse response = this.entityProviderManager.getRequestGetter().getResponse();
-        try {
-            ServletOutputStream stream = response.getOutputStream();
-            response.setContentType(bst.getFormat().getMIMEType());
-            response.addHeader("Content-Disposition", "attachment; filename=" + bst.getName());
-            response.setContentLength((int) bst.getSize());
-            BufferedInputStream buf = new BufferedInputStream(bst.retrieve());
-
-            int readBytes = 0;
-            while ((readBytes = buf.read()) != -1) {
-                stream.write(readBytes);
-            }
-
-            if (stream != null) {
-                stream.close();
-            }
-            if (buf != null) {
-                buf.close();
-            }
-        } catch (IOException ex) {
-            throw new EntityException("Internal Server error", "Unable to open file", 500);
-        } catch (AuthorizeException ae) {
-            throw new EntityException("Forbidden", "The resource is not available for current user", 403);
-        }
-
-        removeConn(context);
-        throw new IllegalArgumentException("Invalid id:" + reference.getId());
-    }
-
-    /**
-     * Standard method for checking if required entity is available
-     * @param id
-     * @return
-     */
     public boolean entityExists(String id) {
         log.info(userInfo() + "entity_exists:" + id);
 
@@ -158,8 +90,8 @@ public class BitstreamProvider extends AbstractBaseProvider implements CoreEntit
 
         boolean result = false;
         try {
-            Bitstream bst = Bitstream.find(context, Integer.parseInt(id));
-            if (bst != null) {
+            EPerson eperson = EPerson.find(context, Integer.parseInt(id));
+            if (eperson != null) {
                 result = true;
             }
         } catch (SQLException ex) {
@@ -171,11 +103,13 @@ public class BitstreamProvider extends AbstractBaseProvider implements CoreEntit
     }
 
     /**
-     * Provide information on particular bitstream
+     * Returns entity containing information about particular user
      * @param reference
      * @return
      */
     public Object getEntity(EntityReference reference) {
+        log.info(userInfo() + "get_entity:" + reference.getId());
+
         Context context;
         try {
             context = new Context();
@@ -184,22 +118,23 @@ public class BitstreamProvider extends AbstractBaseProvider implements CoreEntit
         }
 
         refreshParams(context);
-        log.info(userInfo() + "get_entity:" + reference.getId());
 
         // sample entity
         if (reference.getId().equals(":ID:")) {
-            return new CommunityEntity();
+            return new UserEntity();
         }
 
+
         if (reference.getId() == null) {
-            return new BitstreamEntity();
+            return new UserEntity();
         }
+
         if (entityExists(reference.getId())) {
             try {
                 if (idOnly) {
-                    return new BitstreamEntityId(reference.getId(), context);
+                    return new UserEntityId(reference.getId(), context);
                 } else {
-                    return new BitstreamEntity(reference.getId(), context);
+                    return new UserEntity(reference.getId(), context);
                 }
             } catch (SQLException ex) {
                 throw new IllegalArgumentException("Invalid id:" + reference.getId());
@@ -211,23 +146,51 @@ public class BitstreamProvider extends AbstractBaseProvider implements CoreEntit
     }
 
     /**
-     * There are no entities, not supported by unterlying architecture
-     * In order to find all bitstreams on the system, search for items
-     * and then take bitstream info
+     * Returns the list of users on the system using UserEntity
+     * @see UserEntity
      * @param ref
      * @param search
      * @return
      */
     public List<?> getEntities(EntityReference ref, Search search) {
         log.info(userInfo() + "list_entities:");
-        return null;
+
+        Context context;
+        try {
+            context = new Context();
+        } catch (SQLException ex) {
+            throw new EntityException("Internal server error", "SQL error", 500);
+        }
+
+        // extract and prepare query parameters
+        refreshParams(context);
+        List<Object> entities = new ArrayList<Object>();
+
+        try {
+            EPerson[] epersons = null;
+            epersons = EPerson.findAll(context, EPerson.ID);
+            for (int x = 0; x < epersons.length; x++) {
+                entities.add(idOnly ? new UserEntityId(epersons[x]) : new UserEntity(epersons[x]));
+            }
+        } catch (SQLException ex) {
+            throw new EntityException("Internal server error", "SQL erorr", 500);
+        }
+
+        removeConn(context);
+
+        // do sorting and limiting if necessary
+        if (!idOnly && sortOptions.size() > 0) {
+            Collections.sort(entities, new GenComparator(sortOptions));
+        }
+        removeTrailing(entities);
+
+        return entities;
     }
 
     /**
-     * Sample entity
-     * @return
+     * Returns an Entity object with sample data
      */
     public Object getSampleEntity() {
-        return new BitstreamEntity();
+        return new UserEntity();
     }
 }

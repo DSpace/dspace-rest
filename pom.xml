@@ -1,3 +1,4 @@
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -20,7 +21,7 @@
     </parent>
 
     <repositories>
-            <repository>
+        <repository>
             <id>dspace-snapshot</id>
             <name>DSpace Snapshot Repository</name>
             <url>http://maven.dspace.org/snapshot</url>
@@ -35,7 +36,7 @@
             </snapshots>
         </repository>
 
-            <repository>
+        <repository>
             <id>central</id>
             <name>Maven central repository</name>
             <url>http://repo2.maven.org/maven2</url>
@@ -124,7 +125,7 @@
             <groupId>org.dspace</groupId>
             <artifactId>dspace-api-lang</artifactId>
             <scope>compile</scope>
-            <version>1.5.2.2-SNAPSHOT</version>            
+            <version>1.5.2.2-SNAPSHOT</version>
         </dependency>
 
 <!--
@@ -212,7 +213,7 @@
         </plugins>
     </build>
 
-   <profiles>
+    <profiles>
       <!--
          when activated a dspace.config configuration
          file location passed on the commandline
@@ -221,48 +222,48 @@
          tasks such as updating the ${dspace.dir} in
          web.xml etc.
       -->
-      <profile>
-         <activation>
-            <property>
-               <name>dspace.config</name>
-            </property>
-         </activation>
-         <build>
-            <filters>
-               <filter>${dspace.config}</filter>
-            </filters>
-         </build>
-      </profile>
-      <profile>
-         <id>oracle-support</id>
-         <activation>
-            <property>
-               <name>db.name</name>
-               <value>oracle</value>
-            </property>
-         </activation>
-         <dependencies>
-            <dependency>
-               <groupId>com.oracle</groupId>
-               <artifactId>ojdbc14</artifactId>
-            </dependency>
-         </dependencies>
-      </profile>
-      <profile>
-         <id>postgres-support</id>
-         <activation>
-            <property>
-               <name>!db.name</name>
-            </property>
-         </activation>
-         <dependencies>
-            <dependency>
-               <groupId>postgresql</groupId>
-               <artifactId>postgresql</artifactId>
-            </dependency>
-         </dependencies>
-      </profile>
-   </profiles>
+        <profile>
+            <activation>
+                <property>
+                    <name>dspace.config</name>
+                </property>
+            </activation>
+            <build>
+                <filters>
+                    <filter>${dspace.config}</filter>
+                </filters>
+            </build>
+        </profile>
+        <profile>
+            <id>oracle-support</id>
+            <activation>
+                <property>
+                    <name>db.name</name>
+                    <value>oracle</value>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.oracle</groupId>
+                    <artifactId>ojdbc14</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>postgres-support</id>
+            <activation>
+                <property>
+                    <name>!db.name</name>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>postgresql</groupId>
+                    <artifactId>postgresql</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
 
 </project>

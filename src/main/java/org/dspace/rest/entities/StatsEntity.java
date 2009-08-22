@@ -1,8 +1,40 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * StatsEntity.java
+ *
+ * Version: $Revision$
+ *
+ * Date: $Date$
+ *
+ * Copyright (c) 2002-2009, The DSpace Foundation.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * - Neither the name of the DSpace Foundation nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
  */
-
 package org.dspace.rest.entities;
 
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityId;
@@ -25,62 +57,59 @@ import java.util.regex.Pattern;
 import java.util.HashMap;
 
 /**
- *
+ * Entity describing basic system statistics
+ * @see StatsProvider
  * @author Bojan Suzic, bojan.suzic@gmail.com
- * Based on StatisticsServlet from JSP subproject project
  */
 public class StatsEntity {
 
-   @EntityId private int id;
-   HashMap generalStats = new HashMap<String, String>();
+    @EntityId
+    private int id;
+    HashMap generalStats = new HashMap<String, String>();
 
 
-   // TODO inspect and add additional fields
+    // TODO inspect and add additional fields
+    public StatsEntity(Context context) throws SQLException {
 
-
-   public StatsEntity(Context context) throws SQLException {
-
-       try { 
-            showStatistics(context); }
-        catch (Exception ex) {
+        try {
+            showStatistics(context);
+        } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-   };
+    }
+    ;
 
-   public StatsEntity() {
-        generalStats.put("browse_mini","1");
-        generalStats.put("Community Updates","2");
-        generalStats.put("Workflow Starts","3");
-        generalStats.put("Warnings","4");
-        generalStats.put("Sub Community Added","5");
-        generalStats.put("OAI Requests","6");
-        generalStats.put("browse","7");
-        generalStats.put("Bitstream Views","8");
-        generalStats.put("Bitstream Updates","9");
-        generalStats.put("Searches Performed","10");
-        generalStats.put("Workspace Item Views","11");
-        generalStats.put("Bundles Created","12");
-        generalStats.put("User Logins","13");
-        generalStats.put("Collection Views","14");
-        generalStats.put("Bundle Updates","15");
-        generalStats.put("Bitstreams Added","16");
-        generalStats.put("Item Views","17");
-        generalStats.put("Items Archived","18");
-        generalStats.put("All Items","19");
-        generalStats.put("Community Views","20");
-        generalStats.put("User Home Page Views","21");
-   }
+    public StatsEntity() {
+        generalStats.put("browse_mini", "1");
+        generalStats.put("Community Updates", "2");
+        generalStats.put("Workflow Starts", "3");
+        generalStats.put("Warnings", "4");
+        generalStats.put("Sub Community Added", "5");
+        generalStats.put("OAI Requests", "6");
+        generalStats.put("browse", "7");
+        generalStats.put("Bitstream Views", "8");
+        generalStats.put("Bitstream Updates", "9");
+        generalStats.put("Searches Performed", "10");
+        generalStats.put("Workspace Item Views", "11");
+        generalStats.put("Bundles Created", "12");
+        generalStats.put("User Logins", "13");
+        generalStats.put("Collection Views", "14");
+        generalStats.put("Bundle Updates", "15");
+        generalStats.put("Bitstreams Added", "16");
+        generalStats.put("Item Views", "17");
+        generalStats.put("Items Archived", "18");
+        generalStats.put("All Items", "19");
+        generalStats.put("Community Views", "20");
+        generalStats.put("User Home Page Views", "21");
+    }
 
-
-   @Override
-   public String toString() {
-       return "id:" + this.id;
-   }
-
+    @Override
+    public String toString() {
+        return "id:" + this.id;
+    }
 
     private void showStatistics(Context context)
-        throws IOException, SQLException
-    {
+            throws IOException, SQLException {
         StringBuffer report = new StringBuffer();
         String date = null;
 
@@ -93,8 +122,7 @@ public class StatsEntity {
         InputStreamReader ir = null;
         BufferedReader br = null;
 
-        try
-        {
+        try {
             List monthsList = new ArrayList();
 
             Pattern monthly = Pattern.compile("report-([0-9][0-9][0-9][0-9]-[0-9]+)\\.html");
@@ -105,35 +133,27 @@ public class StatsEntity {
 
             // if no date is passed then we want to get the most recent general
             // report
-            if (date == null)
-            {
+            if (date == null) {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy'-'M'-'dd");
                 Date mostRecentDate = null;
 
-                for (int i = 0; i < reports.length; i++)
-                {
+                for (int i = 0; i < reports.length; i++) {
                     Matcher matchGeneral = general.matcher(reports[i].getName());
-                    if (matchGeneral.matches())
-                    {
+                    if (matchGeneral.matches()) {
                         Date parsedDate = null;
 
-                        try
-                        {
-                             parsedDate = sdf.parse(matchGeneral.group(1).trim());
-                        }
-                        catch (ParseException e)
-                        {
+                        try {
+                            parsedDate = sdf.parse(matchGeneral.group(1).trim());
+                        } catch (ParseException e) {
                             // FIXME: currently no error handling
                         }
 
-                        if (mostRecentDate == null)
-                        {
+                        if (mostRecentDate == null) {
                             mostRecentDate = parsedDate;
                             reportFile = reports[i];
                         }
 
-                        if (parsedDate != null && parsedDate.compareTo(mostRecentDate) > 0)
-                        {
+                        if (parsedDate != null && parsedDate.compareTo(mostRecentDate) > 0) {
                             mostRecentDate = parsedDate;
                             reportFile = reports[i];
                         }
@@ -142,39 +162,30 @@ public class StatsEntity {
             }
 
             // if a date is passed then we want to get the file for that month
-            if (date != null)
-            {
+            if (date != null) {
                 String desiredReport = "report-" + date + ".html";
 
-                for (int i = 0; i < reports.length; i++)
-                {
-                    if (reports[i].getName().equals(desiredReport))
-                    {
+                for (int i = 0; i < reports.length; i++) {
+                    if (reports[i].getName().equals(desiredReport)) {
                         reportFile = reports[i];
                     }
                 }
             }
 
-            if (reportFile == null)
-            {
-              System.out.println(" blank stats ");
+            if (reportFile == null) {
+                System.out.println(" blank stats ");
             }
 
             // finally, build the list of report dates
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy'-'M");
-            for (int i = 0; i < reports.length; i++)
-            {
+            for (int i = 0; i < reports.length; i++) {
                 Matcher matchReport = monthly.matcher(reports[i].getName());
-                if (matchReport.matches())
-                {
+                if (matchReport.matches()) {
                     Date parsedDate = null;
 
-                    try
-                    {
-                         parsedDate = sdf.parse(matchReport.group(1).trim());
-                    }
-                    catch (ParseException e)
-                    {
+                    try {
+                        parsedDate = sdf.parse(matchReport.group(1).trim());
+                    } catch (ParseException e) {
                         // FIXME: currently no error handling
                     }
 
@@ -187,54 +198,60 @@ public class StatsEntity {
 
             Arrays.sort(months);
 
-            try
-            {
+            try {
                 fir = new FileInputStream(reportFile.getPath());
                 ir = new InputStreamReader(fir, "UTF-8");
                 br = new BufferedReader(ir);
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 // FIXME: no error handing yet
-                throw new RuntimeException(e.getMessage(),e);
+                throw new RuntimeException(e.getMessage(), e);
             }
 
             // FIXME: there's got to be a better way of doing this
             String line = null;
-            while ((line = br.readLine()) != null)
-            {
+            while ((line = br.readLine()) != null) {
                 report.append(line);
             }
-        }
-        finally
-        {
-            if (br != null)
-                try { br.close(); } catch (IOException ioe) { }
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException ioe) {
+                }
+            }
 
-            if (ir != null)
-                try { ir.close(); } catch (IOException ioe) { }
+            if (ir != null) {
+                try {
+                    ir.close();
+                } catch (IOException ioe) {
+                }
+            }
 
-            if (fir != null)
-                try { fir.close(); } catch (IOException ioe) { }
+            if (fir != null) {
+                try {
+                    fir.close();
+                } catch (IOException ioe) {
+                }
+            }
         }
-     
+
         String filteredReport = report.toString();
-        filteredReport = filteredReport.replaceAll("<div.*?>.*?</div>","");
-        filteredReport = filteredReport.replaceAll("<style.*?>.*?</style>","");
-        filteredReport = filteredReport.replaceAll("<th.*?>.*?</th>","");
-        filteredReport = filteredReport.replaceAll("\t","");
-        filteredReport = filteredReport.replaceAll("(<td.*?>)(.*?)(</td.*?>)(<td.*?>)(.*?)(</td.*?>)","$2::$5::");
-        filteredReport = filteredReport.replaceAll("<.*?>","");
+        filteredReport = filteredReport.replaceAll("<div.*?>.*?</div>", "");
+        filteredReport = filteredReport.replaceAll("<style.*?>.*?</style>", "");
+        filteredReport = filteredReport.replaceAll("<th.*?>.*?</th>", "");
+        filteredReport = filteredReport.replaceAll("\t", "");
+        filteredReport = filteredReport.replaceAll("(<td.*?>)(.*?)(</td.*?>)(<td.*?>)(.*?)(</td.*?>)", "$2::$5::");
+        filteredReport = filteredReport.replaceAll("<.*?>", "");
         String[] splittedReport = filteredReport.split("::");
-        for (int x=0; x<splittedReport.length; x++)
-            generalStats.put(splittedReport[x], splittedReport[x+1]);
+        for (int x = 0; x < splittedReport.length; x++) {
+            generalStats.put(splittedReport[x], splittedReport[x + 1]);
+        }
         context.complete();
     }
 
 
     // FIXME: the methods here are written this way as the xml support is not
     // working for hashmaps in sakai completely
-
     public String getbrowse_mini() {
         return this.generalStats.get("browse_mini").toString();
     }
@@ -323,5 +340,4 @@ public class StatsEntity {
 //    public HashMap<String, String> getStats() {
 //        return this.generalStats;
 //    }
-   
 }

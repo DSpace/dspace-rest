@@ -1,6 +1,39 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * AbstractBaseProvider.java
+ *
+ * Version: $Revision$
+ *
+ * Date: $Date$
+ *
+ * Copyright (c) 2002-2009, The DSpace Foundation.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * - Neither the name of the DSpace Foundation nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
  */
 package org.dspace.rest.providers;
 
@@ -18,10 +51,11 @@ import org.sakaiproject.entitybus.exception.EntityException;
 import org.apache.log4j.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.sakaiproject.entitybus.EntityView;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.sql.SQLException;
+import org.dspace.rest.util.UtilHelper;
 
 /**
  * Base abstract class for Entity Providers. Takes care about general
@@ -37,14 +71,19 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
 
     // query parameters used in subclasses
     protected RequestStorage reqStor;
-    protected boolean idOnly, topLevelOnly, in_archive, immediateOnly, withdrawn;
-    protected String query,  user,  pass,  userc,  passc,  _order,  _sort,  
-            loggedUser, _sdate, _edate;
+    protected boolean idOnly,  topLevelOnly,  in_archive,  immediateOnly,  withdrawn;
+    protected String query,  user,  pass,  userc,  passc,  _order,  _sort,  loggedUser,  _sdate,  _edate;
     protected int _start,  _page,  _perpage,  _limit,  sort;
+    protected List<Integer> sortOptions = new ArrayList<Integer>();
     protected Collection _collection = null;
     protected Community _community = null;
-    private static Logger log = Logger.getLogger(UserEntityProvider.class);
+    private static Logger log = Logger.getLogger(UserProvider.class);
 
+    /**
+     * Handle registration of EntityProvider
+     * @param entityProviderManager
+     * @throws java.sql.SQLException
+     */
     public AbstractBaseProvider(EntityProviderManager entityProviderManager) throws SQLException {
         this.entityProviderManager = entityProviderManager;
         try {
@@ -52,6 +91,8 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
         } catch (Exception e) {
             throw new RuntimeException("Unable to register the provider (" + this + "): " + e, e);
         }
+
+        // get request info for later parsing of parameters
         this.reqStor = entityProviderManager.getRequestStorage();
     }
     protected EntityProviderManager entityProviderManager;
@@ -68,6 +109,10 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
         entityProviderManager.unregisterEntityProvider(this);
     }
 
+    /**
+     * Extracts and returns information about current session user, for logging
+     * @return
+     */
     public String userInfo() {
         String ipaddr = "";
         try {
@@ -77,9 +122,17 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
         return "user:" + loggedUser + ":ip_addr=" + ipaddr + ":";
     }
 
-    // checking request headers and applying requested format and login data
-    // note that header based request has precedence over query one
+    /**
+     * Checks request headers and applying requested format and login data
+     * note that header based request has precedence over query one
+     * This method is called before other methods processing request
+     * so we can change some properties of response
+     * @param view
+     * @param req
+     * @param res
+     */
     public void before(EntityView view, HttpServletRequest req, HttpServletResponse res) {
+        // json by default if nothing is requested
         try {
             if (req.getContentType().equals("application/json")) {
                 view.setExtension("json");
@@ -96,6 +149,9 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
             }
         }
 
+        /**
+         * Check user/login data in header and apply if present
+         */
         try {
             if (!(req.getHeader("user").isEmpty() && req.getHeader("pass").isEmpty())) {
                 userc = req.getHeader("user");
@@ -107,13 +163,27 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
         }
     }
 
+    /**
+     * Called after processing of request
+     * Not relevant in this case but implementation must be available
+     * @param view
+     * @param req
+     * @param res
+     */
     public void after(EntityView view, HttpServletRequest req, HttpServletResponse res) {
-
     }
 
-    // extract parameters from query and do basic authentication
+    /**
+     * Extract parameters from query and do basic authentication, analyze
+     * and prepare sorting and other fields
+     * @param context current database context locally (in subclass method)
+     * defined but used here for loging and other purposes
+     */
     public void refreshParams(Context context) {
 
+        /**
+         * now check user login info and try to register
+         */
         try {
             user = reqStor.getStoredValue("user").toString();
         } catch (NullPointerException ex) {
@@ -126,11 +196,13 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
             pass = "";
         }
 
+        // these are from header - have priority
         if (!(userc.isEmpty() && passc.isEmpty())) {
             user = userc;
             pass = passc;
         }
 
+        // now try to login user
         loggedUser = "anonymous";
         try {
             EPerson eUser = EPerson.findByEmail(context, user);
@@ -180,6 +252,9 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
             in_archive = false;
         }
 
+        /**
+         * these are fields based on RoR conventions
+         */
         try {
             _order = reqStor.getStoredValue("_order").toString();
         } catch (NullPointerException ex) {
@@ -190,6 +265,11 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
             _sort = reqStor.getStoredValue("_sort").toString();
         } catch (NullPointerException ex) {
             _sort = "";
+        }
+
+        // both parameters are used according to requirements
+        if (_order.length() > 0 && _sort.equals("")) {
+            _sort = _order;
         }
 
         try {
@@ -216,6 +296,19 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
             _limit = 0;
         }
 
+
+        // some checking for invalid values
+        if (_page < 0) {
+            _page = 0;
+        }
+        if (_perpage < 0) {
+            _perpage = 0;
+        }
+        if (_limit < 0) {
+            _limit = 0;
+        }
+
+
         try {
             _sdate = reqStor.getStoredValue("startdate").toString();
         } catch (NullPointerException ex) {
@@ -235,51 +328,100 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
         }
 
 
-        // defining sort fields and values for UserEntityProvder
-        if (this.getClass().getName().equalsIgnoreCase("org.dspace.rest.providers.UserEntityProvider")) {
-            if (_sort.equalsIgnoreCase("id")) {
-                sort = EPerson.ID;
-            } else if (_sort.equalsIgnoreCase("language")) {
-                sort = EPerson.LANGUAGE;
-            } else if (_sort.equalsIgnoreCase("netid")) {
-                sort = EPerson.NETID;
+        // defining sort fields and values
+        _sort = _sort.toLowerCase();
+        String[] sort_arr = _sort.split(",");
+        for (String option : sort_arr) {
+            if (option.startsWith("submitter")) {
+                sortOptions.add(UtilHelper.SORT_SUBMITTER);
+            } else if (option.startsWith("lastname")) {
+                sortOptions.add(UtilHelper.SORT_LASTNAME);
+            } else if (option.startsWith("fullname")) {
+                sortOptions.add(UtilHelper.SORT_FULL_NAME);
+            } else if (option.startsWith("language")) {
+                sortOptions.add(UtilHelper.SORT_LANGUAGE);
+            } else if (option.startsWith("lastmodified")) {
+                sortOptions.add(UtilHelper.SORT_LASTMODIFIED);
+            } else if (option.startsWith("countitems")) {
+                sortOptions.add(UtilHelper.SORT_COUNT_ITEMS);
+            } else if (option.startsWith("name")) {
+                sortOptions.add(UtilHelper.SORT_NAME);
             } else {
-                sort = EPerson.LASTNAME;
+                sortOptions.add(UtilHelper.SORT_ID);
             }
+            if ((option.endsWith("_desc") || option.endsWith("_reverse"))) {
+                int i = sortOptions.get(sortOptions.size() - 1);
+                sortOptions.remove(sortOptions.size() - 1);
+                i += 100;
+                sortOptions.add(i);
+            }
+
         }
 
         int intcommunity = 0;
         int intcollection = 0;
 
+        // integer values used in some parts
         try {
             intcommunity = Integer.parseInt(reqStor.getStoredValue("community").toString());
-        } catch (NullPointerException nul) { }
+        } catch (NullPointerException nul) {
+        }
 
         try {
             _community = Community.find(context, intcommunity);
         } catch (NullPointerException nul) {
-        } catch (SQLException sql) {  }
+        } catch (SQLException sql) {
+        }
 
         try {
             intcollection = Integer.parseInt(reqStor.getStoredValue("collection").toString());
-        } catch (NullPointerException nul) {  }
+        } catch (NullPointerException nul) {
+        }
 
         try {
             _collection = Collection.find(context, intcollection);
         } catch (NullPointerException nul) {
-        } catch (SQLException sql) { }
+        } catch (SQLException sql) {
+        }
 
-        if ((intcommunity > 0 ) && (intcollection > 0))
+        if ((intcommunity > 0) && (intcollection > 0)) {
             throw new EntityException("Bad request", "Community and collection selected", 400);
-        
-        if ((intcommunity >0) && (_community == null))
-            throw new EntityException("Bad request", "Unknown community", 400);
+        }
 
-        if ((intcollection >0) && (_collection == null))
+        if ((intcommunity > 0) && (_community == null)) {
+            throw new EntityException("Bad request", "Unknown community", 400);
+        }
+
+        if ((intcollection > 0) && (_collection == null)) {
             throw new EntityException("Bad request", "Unknown collection", 400);
+        }
 
     }
 
+    /**
+     * Remove items from list in order to display only requested items
+     * (according to _start, _limit etc.)
+     * @param entities
+     */
+    public void removeTrailing(List<?> entities) {
+        if ((_start > 0) && (_start < entities.size())) {
+            for (int x = 0; x < _start; x++) {
+                entities.remove(x);
+            }
+        }
+        if (_perpage > 0) {
+            entities.subList(0, _page * _perpage).clear();
+        }
+        if ((_limit > 0) && entities.size() > _limit) {
+            entities.subList(_limit, entities.size()).clear();
+        }
+    }
+
+    /**
+     * Complete connection in order to lower load of sql server
+     * this way it goes faster and prevents droppings with higher load
+     * @param context
+     */
     public void removeConn(Context context) {
         // close connection to prevent connection problems
         try {
@@ -289,6 +431,6 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
     }
 
     public String[] getHandledOutputFormats() {
-        return new String[]{Formats.JSON, Formats.XML, Formats.FORM};
+          return new String[]{Formats.JSON, Formats.XML, Formats.FORM};
     }
 }

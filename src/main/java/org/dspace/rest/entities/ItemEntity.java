@@ -1,8 +1,40 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * ItemEntity.java
+ *
+ * Version: $Revision$
+ *
+ * Date: $Date$
+ *
+ * Copyright (c) 2002-2009, The DSpace Foundation.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * - Neither the name of the DSpace Foundation nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
  */
-
 package org.dspace.rest.entities;
 
 import org.sakaiproject.entitybus.entityprovider.annotations.EntityFieldRequired;
@@ -23,68 +55,78 @@ import java.io.StringWriter;
 import org.jdom.output.XMLOutputter;
 import org.jdom.Element;
 
-
 /**
- *
+ * Entity describing item
+ * @see ItemEntityId
+ * @see Item
  * @author Bojan Suzic, bojan.suzic@gmail.com
  */
-public class ItemEntity {
+public class ItemEntity extends ItemEntityId {
 
-   @EntityId private int id;
-   @EntityFieldRequired private String name;
-   @EntityFieldRequired private Boolean canEdit;
-   private String handle;
-   private int type;
-   List<Object> bundles = new ArrayList<Object>();
-   List<Object> bitstreams = new ArrayList<Object>();
-   List<Object> collections = new ArrayList<Object>();
-   List<Object> communities = new ArrayList<Object>();
-   String metadata;
-   Date lastModified;
-   Collection owningCollection;
-   boolean isArchived, isWithdrawn;
-   UserEntity submitter;
-   private DisseminationCrosswalk xHTMLHeadCrosswalk;
+    @EntityId
+    private int id;
+    @EntityFieldRequired
+    private String name;
+    @EntityFieldRequired
+    private Boolean canEdit;
+    private String handle;
+    private int type;
+    List<Object> bundles = new ArrayList<Object>();
+    List<Object> bitstreams = new ArrayList<Object>();
+    List<Object> collections = new ArrayList<Object>();
+    List<Object> communities = new ArrayList<Object>();
+    String metadata;
+    Date lastModified;
+    Collection owningCollection;
+    boolean isArchived, isWithdrawn;
+    UserEntity submitter;
+    private DisseminationCrosswalk xHTMLHeadCrosswalk;
 
 
-   // TODO inspect and add additional fields
+    // TODO inspect and add additional fields
+    public ItemEntity(String uid, Context context) throws SQLException {
+        Item res = Item.find(context, Integer.parseInt(uid));
+        this.id = res.getID();
+        this.canEdit = res.canEdit();
+        this.handle = res.getHandle();
+        this.name = res.getName();
+        this.type = res.getType();
+        this.lastModified = res.getLastModified();
+        this.owningCollection = res.getOwningCollection();
+        this.isArchived = res.isArchived();
+        this.isArchived = res.isWithdrawn();
+        this.submitter = new UserEntity(res.getSubmitter());
+        this.metadata = prepareMetadata(res);
+        Bundle[] bun = res.getBundles();
+        Bitstream[] bst = res.getNonInternalBitstreams();
+        Collection[] col = res.getCollections();
+        Community[] com = res.getCommunities();
+        for (Bundle b : bun) {
+            this.bundles.add(new BundleEntity(b));
+        }
+        for (Bitstream b : bst) {
+            this.bitstreams.add(new BitstreamEntity(b));
+        }
+        for (Collection c : col) {
+            this.collections.add(new CollectionEntity(c));
+        }
+        for (Community c : com) {
+            this.communities.add(new CommunityEntity(c));
+        }
+        context.complete();
+    }
 
-   public ItemEntity(String uid, Context context) throws SQLException {
-       Item res = Item.find(context, Integer.parseInt(uid));
-       this.id = res.getID();
-       this.canEdit = res.canEdit();
-       this.handle = res.getHandle();
-       this.name = res.getName();
-       this.type = res.getType();
-       this.lastModified = res.getLastModified();
-       this.owningCollection = res.getOwningCollection();
-       this.isArchived = res.isArchived();
-       this.isArchived = res.isWithdrawn();
-       this.submitter = new UserEntity(res.getSubmitter());
-       this.metadata = prepareMetadata(res);
-       Bundle[] bun = res.getBundles();
-       Bitstream[] bst = res.getNonInternalBitstreams();
-       Collection[] col = res.getCollections();
-       Community[] com = res.getCommunities();
-       for (Bundle b : bun)
-           this.bundles.add(new BundleEntity(b));
-       for (Bitstream b : bst)
-           this.bitstreams.add(new BitstreamEntity(b));
-       for (Collection c : col)
-           this.collections.add(new CollectionEntity(c));
-       for (Community c : com)
-           this.communities.add(new CommunityEntity(c));
-       context.complete();
-   }
-
-   public ItemEntity(Item item) throws SQLException {
-       // check calling package/class in order to prevent chaining
-       boolean includeFull = false;
-       try {
+    public ItemEntity(Item item) throws SQLException {
+        // check calling package/class in order to prevent chaining
+        boolean includeFull = false;
+        try {
             StackTraceElement[] ste = new Throwable().getStackTrace();
-            if ((ste.length > 1) && (ste[1].getClassName().contains("org.dspace.rest.providers")))
+            if ((ste.length > 1) && (ste[1].getClassName().contains("org.dspace.rest.providers"))) {
                 includeFull = true;
-        } catch (Exception ex) { System.out.println(ex.getMessage()); }
+            }
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
 
         this.canEdit = item.canEdit();
         this.handle = item.getHandle();
@@ -102,24 +144,31 @@ public class ItemEntity {
         Bitstream[] bst = item.getNonInternalBitstreams();
         Collection[] col = item.getCollections();
         Community[] com = item.getCommunities();
-        for (Bundle b : bun)
+        for (Bundle b : bun) {
             this.bundles.add(includeFull ? new BundleEntity(b) : new BundleEntityId(b));
-        for (Bitstream b : bst)
+        }
+        for (Bitstream b : bst) {
             this.bitstreams.add(includeFull ? new BitstreamEntity(b) : new BitstreamEntity(b));
-        for (Collection c : col)
+        }
+        for (Collection c : col) {
             this.collections.add(includeFull ? new CollectionEntity(c) : new CollectionEntityId(c));
-        for (Community c : com)
+        }
+        for (Community c : com) {
             this.communities.add(includeFull ? new CommunityEntity(c) : new CommunityEntityId(c));
-   }
+        }
+    }
 
-   public ItemEntity() {
-       // check calling package/class in order to prevent chaining
-       boolean includeFull = false;
-       try {
+    public ItemEntity() {
+        // check calling package/class in order to prevent chaining
+        boolean includeFull = false;
+        try {
             StackTraceElement[] ste = new Throwable().getStackTrace();
-            if ((ste.length > 1) && (ste[1].getClassName().contains("org.dspace.rest.providers")))
+            if ((ste.length > 1) && (ste[1].getClassName().contains("org.dspace.rest.providers"))) {
                 includeFull = true;
-        } catch (Exception ex) { System.out.println(ex.getMessage()); }
+            }
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
 
         this.canEdit = false;
         this.handle = "123456789/0";
@@ -131,23 +180,21 @@ public class ItemEntity {
         this.collections.add(includeFull ? new CollectionEntity() : new BundleEntityId());
         this.communities.add(includeFull ? new CommunityEntity() : new BundleEntityId());
         this.metadata = "";
-   }
+    }
 
-   // taken from jspui handle implementation
-   // it should be probably properly formated, as HashMap
-   // for example but currently HashMap is not supported
-   public String prepareMetadata(Item res) {
+    // taken from jspui handle implementation
+    // it should be probably properly formated, as HashMap
+    // for example but currently HashMap is not supported
+    public String prepareMetadata(Item res) {
         String headMetadata = "";
 
-        try
-        {
+        try {
             xHTMLHeadCrosswalk = new XHTMLHeadDisseminationCrosswalk();
             List l = xHTMLHeadCrosswalk.disseminateList(res);
             StringWriter sw = new StringWriter();
 
             XMLOutputter xmlo = new XMLOutputter();
-            for (int i = 0; i < l.size(); i++)
-            {
+            for (int i = 0; i < l.size(); i++) {
                 Element e = (Element) l.get(i);
                 // FIXME: we unset the Namespace so it's not printed.
                 // This is fairly yucky, but means the same crosswalk should
@@ -157,77 +204,75 @@ public class ItemEntity {
 
             }
             headMetadata = sw.toString();
-        }
-        catch (Exception ce)
-        {
+        } catch (Exception ce) {
             ce.printStackTrace();
         }
 
         return headMetadata;
-   }
+    }
 
-   public String getMetadata() {
-       return this.metadata;
-   }
+    public String getMetadata() {
+        return this.metadata;
+    }
 
-   public UserEntity getSubmitter() {
-       return this.submitter;
-   }
-   public boolean getIsArchived() {
-       return this.isArchived;
-   }
+    public UserEntity getSubmitter() {
+        return this.submitter;
+    }
 
-   public boolean getIsWithdrawn() {
-       return this.isWithdrawn;
-   }
+    public boolean getIsArchived() {
+        return this.isArchived;
+    }
 
-   public Collection getOwningCollection() {
-       return this.getOwningCollection();
-   }
+    public boolean getIsWithdrawn() {
+        return this.isWithdrawn;
+    }
 
-   public Date getLastModified() {
-       return this.lastModified;
-   }
+    public Collection getOwningCollection() {
+        return this.getOwningCollection();
+    }
 
-   public List getCollections() {
-       return this.collections;
-   }
+    public Date getLastModified() {
+        return this.lastModified;
+    }
 
-   public List getCommunities() {
-       return this.communities;
-   }
-   
-   public String getName() {
-       return this.name;
-   }
+    public List getCollections() {
+        return this.collections;
+    }
 
-   public List getBitstreams() {
-       return this.bitstreams;
-   }
+    public List getCommunities() {
+        return this.communities;
+    }
 
-   public String getHandle() {
-       return this.handle;
-   }
+    public String getName() {
+        return this.name;
+    }
 
-   public boolean canEdit() {
-       return this.canEdit;
-   }
+    public List getBitstreams() {
+        return this.bitstreams;
+    }
 
-   public int getId() {
-       return this.id;
-   }
+    public String getHandle() {
+        return this.handle;
+    }
 
-   public int getType() {
-      return this.type;
-   }
+    public boolean canEdit() {
+        return this.canEdit;
+    }
 
-   public List getBundles() {
-       return this.bundles;
-   }
+    public int getId() {
+        return this.id;
+    }
+
+    public int getType() {
+        return this.type;
+    }
+
+    public List getBundles() {
+        return this.bundles;
+    }
 
     @Override
     public String toString() {
         return "id:" + this.id + ", stuff.....";
     }
-
 }
