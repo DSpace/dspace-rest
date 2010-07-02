@@ -137,6 +137,12 @@ public class UtilHelper {
                         for (Community o : res.getSubcommunities()) {
                             entities.add(idOnly ? new CommunityEntityId(o) : new CommunityEntity(o));
                         }
+
+                        for (Collection o : res.getCollections()) { // added later for test purposes
+                            entities.add(idOnly ? new CollectionEntityId(o) : new CollectionEntity(o));
+                        }
+
+
                     }
                 }
                 break;

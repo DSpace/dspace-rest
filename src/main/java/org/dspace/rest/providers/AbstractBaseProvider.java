@@ -431,6 +431,6 @@ public abstract class AbstractBaseProvider implements EntityProvider, Resolvable
     }
 
     public String[] getHandledOutputFormats() {
-          return new String[]{Formats.JSON, Formats.XML, Formats.FORM};
+          return new String[]{Formats.JSON, Formats.XML, Formats.FORM, Formats.ATOM};
     }
 }

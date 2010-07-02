@@ -139,11 +139,11 @@ public class StandardEntityProvider extends AbstractRESTProvider implements Core
     }
 
     public String[] getHandledOutputFormats() {
-        return new String[] {Formats.HTML, Formats.JSON, Formats.XML, Formats.FORM};
+        return new String[] {Formats.HTML, Formats.JSON, Formats.XML, Formats.FORM, Formats.ATOM};
      }
 
      public String[] getHandledInputFormats() {
-        return new String[] {Formats.HTML, Formats.JSON, Formats.XML};
+        return new String[] {Formats.HTML, Formats.JSON, Formats.XML, Formats.ATOM};
      }
 
 }

@@ -122,7 +122,7 @@ public class CommunitiesProvider extends AbstractBaseProvider implements CoreEnt
     }
 
     /**
-     * Custom action, returns list containingchildren of community
+     * Custom action, returns list containing children of community
      * @param reference
      * @param view
      * @param params
@@ -132,6 +132,48 @@ public class CommunitiesProvider extends AbstractBaseProvider implements CoreEnt
      */
     @EntityCustomAction(action = "children", viewKey = EntityView.VIEW_SHOW)
     public Object children(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
+        log.info(userInfo() + "children_action:" + reference.getId());
+        List<Object> entities = new ArrayList<Object>();
+
+        System.out.println("-- reference " + reference.prefix + " id " + reference.getId() + " get reference " + reference.getId());
+
+        String id = reference.getId();
+        Context context;
+        try {
+            context = new Context();
+        } catch (SQLException ex) {
+            throw new EntityException("Internal server error", "SQL error", 500);
+        }
+
+        refreshParams(context);
+
+        if (entityExists(reference.getId())) {
+            entities = UtilHelper.getObjects(id, context, UtilHelper.CHILDREN, idOnly, immediateOnly);
+        } else {
+            throw new IllegalArgumentException("Invalid id:" + reference.getId());
+        }
+
+        removeConn(context);
+        if (!idOnly && sortOptions.size() > 0) {
+            Collections.sort(entities, new GenComparator(sortOptions));
+        }
+        removeTrailing(entities);
+
+        return entities;
+    }
+
+
+      /**
+     * Custom action, returns list containingchildren of community
+     * @param reference
+     * @param view
+     * @param params
+     * @return
+     * @throws java.sql.SQLException
+     * @throws org.dspace.app.webui.components.RecentSubmissionsException
+     */
+    @EntityCustomAction(action = "query", viewKey = EntityView.VIEW_SHOW)
+    public Object children2(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
         log.info(userInfo() + "children_action:" + reference.getId());
         List<Object> entities = new ArrayList<Object>();
 
@@ -159,6 +201,8 @@ public class CommunitiesProvider extends AbstractBaseProvider implements CoreEnt
 
         return entities;
     }
+
+
 
     /**
      * Custom action, returns list containing collections in this community

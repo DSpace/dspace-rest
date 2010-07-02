@@ -81,9 +81,9 @@ public class DS16DirectServlet extends DirectServlet {
         String config = getServletContext().getInitParameter("dspace-config");
 
         // for dev testing only COMMENT IN WORKING ENVIRONMENT
-        //if (config.contains("dspace.dir")) {
-        //    config = "/dspace/config/dspace.cfg";
-        //}
+        if (config.contains("dspace.dir")) {
+            config = "/devel/dspace/config/dspace.cfg";
+        }
 
         ConfigurationManager.loadConfig(config);
         this.entityProviders = new Vector<AbstractBaseProvider>();

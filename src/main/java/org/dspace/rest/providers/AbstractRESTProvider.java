@@ -30,6 +30,7 @@ public abstract class AbstractRESTProvider implements EntityProvider {
         } catch (Exception e) {
             throw new RuntimeException("Unable to register the provider ("+this+"): " + e, e);
         }
+        
         try {
             idOnly = reqStor.getStoredValue("idOnly").equals("true");
         } catch (NullPointerException ex) { idOnly = false; };
