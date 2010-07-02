@@ -130,7 +130,7 @@ public class CommunitiesProvider extends AbstractBaseProvider implements CoreEnt
      * @throws java.sql.SQLException
      * @throws org.dspace.app.webui.components.RecentSubmissionsException
      */
-    @EntityCustomAction(action = "children", viewKey = EntityView.VIEW_SHOW)
+    @EntityCustomAction(action = "children", viewKey = EntityView.VIEW_SHOW)   
     public Object children(EntityReference reference, EntityView view, Map<String, Object> params) throws SQLException, RecentSubmissionsException {
         log.info(userInfo() + "children_action:" + reference.getId());
         List<Object> entities = new ArrayList<Object>();
