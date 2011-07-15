@@ -66,13 +66,27 @@
         <url>http://scm.dspace.org/svn/repo/modules/dspace-rest/trunk</url>
     </scm>
 
+	<!--  the following section allows us to inherit the dependency management of dspace-parent 
+	while using the global dspace-pom as our parent for release settings -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.dspace</groupId>
+				<artifactId>dspace-parent</artifactId>
+				<version>${version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+    
     <dependencies>
         <!-- all in one requires the api and impl bundled in with the rest webapp -->
         <dependency>
             <groupId>org.dspace</groupId>
             <artifactId>dspace-api</artifactId>
             <scope>compile</scope>
-            <version>1.7.1</version>
+			<version>${version}</version>
         </dependency>
 
         <dependency>
@@ -85,7 +99,7 @@
             <groupId>org.dspace</groupId>
             <artifactId>dspace-jspui-api</artifactId>
             <scope>compile</scope>
-            <version>1.7.1</version>
+			<version>${version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.dspace</groupId>
