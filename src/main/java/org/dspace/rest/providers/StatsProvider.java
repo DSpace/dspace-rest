@@ -5,12 +5,12 @@
  *
  * http://www.dspace.org/license/
  */
-
 package org.dspace.rest.providers;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import org.dspace.core.ConfigurationManager;
+import java.io.File;
 import org.sakaiproject.entitybus.EntityReference;
 import org.sakaiproject.entitybus.entityprovider.CoreEntityProvider;
 import org.sakaiproject.entitybus.entityprovider.EntityProviderManager;
@@ -20,6 +20,11 @@ import org.sakaiproject.entitybus.exception.EntityException;
 import java.sql.SQLException;
 import org.apache.log4j.Logger;
 import org.dspace.rest.entities.*;
+import org.dspace.app.statistics.ReportGenerator;
+import org.dspace.rest.entities.StatReport;
+import org.dspace.app.statistics.Report;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Provides interface for access to basic statistic data
@@ -29,6 +34,8 @@ import org.dspace.rest.entities.*;
 public class StatsProvider extends AbstractBaseProvider implements CoreEntityProvider {
 
     private static Logger log = Logger.getLogger(UserProvider.class);
+    private Pattern analysisMonthlyPattern = Pattern.compile("dspace-log-monthly-([0-9][0-9][0-9][0-9]-[0-9]+)\\.dat");
+    private Pattern analysisGeneralPattern = Pattern.compile("dspace-log-general-([0-9]+-[0-9]+-[0-9]+)\\.dat");
 
     public StatsProvider(EntityProviderManager entityProviderManager) throws SQLException {
         super(entityProviderManager);
@@ -88,16 +95,36 @@ public class StatsProvider extends AbstractBaseProvider implements CoreEntityPro
 
         refreshParams(context);
 
+        List<Object> stat = new ArrayList<Object>();
+        File reportDir = new File(ConfigurationManager.getProperty("log.dir"));
+
+        ReportGenerator rg = new ReportGenerator();
+        // iterate through files in report directory and load each
+        File[] reports = reportDir.listFiles();
         try {
-            List<Object> stat = new ArrayList<Object>();
-            stat.add(new StatsEntity(context));
+            for (File report : reports) {
+                Matcher genMatcher = analysisGeneralPattern.matcher(report.getName());
+                Matcher monMatcher = analysisMonthlyPattern.matcher(report.getName());
+                StatReport statReport = new StatReport();
+                if (genMatcher.matches()) {
+                    statReport.setType("general");
+                    rg.processReport(context, statReport, report.getAbsolutePath());
+                    stat.add(statReport);
+                } else if (monMatcher.matches()) {
+                    statReport.setType("monthly");
+                    rg.processReport(context, statReport, report.getAbsolutePath());
+                    stat.add(statReport);
+                }
+            }
+
             removeConn(context);
             return stat;
         } catch (SQLException ex) {
             throw new EntityException("Internal Server Error", "SQL Problem", 500);
+        } catch (Exception ex) {
+            throw new EntityException("Internal Server Error", "Log file Problem", 500);
         }
     }
-
 
     // TODO CHANGE
     public Object getSampleEntity() {
