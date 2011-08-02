@@ -5,7 +5,7 @@
     <packaging>war</packaging>
     <name>DSpace REST API</name>
     <url>http://projects.dspace.org</url>
-    <description>The REST API for DSpace</description>
+    <description>The REST API for DSpace using the Sakai EntityBus</description>
 
     <parent>
         <artifactId>dspace-parent</artifactId>
@@ -27,35 +27,6 @@
             <layout>default</layout>
         </repository>
     </repositories>
-
-    <build>
-         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <configuration>
-                    <archiveClasses>false</archiveClasses>
-                    <!-- In version 2.1-alpha-1, this was incorrectly named warSourceExcludes -->
-                    <packagingExcludes>WEB-INF/lib/*.jar</packagingExcludes>
-                    <warSourceExcludes>WEB-INF/lib/*.jar</warSourceExcludes>
-                    <webResources>
-                        <resource>
-                            <filtering>true</filtering>
-                            <directory>${basedir}/src/main/webapp</directory>
-                            <includes>
-                                <include>WEB-INF/web.xml</include>
-                            </includes>
-                        </resource>
-                    </webResources>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>prepare-package</phase>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
     <profiles>
         <!--
@@ -147,7 +118,6 @@
             <scope>compile</scope>
             <version>1.0.8</version>
         </dependency>
-
     </dependencies>
 
     <properties>
